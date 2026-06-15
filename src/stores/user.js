@@ -2,7 +2,10 @@ import {defineStore} from 'pinia'
 import {ref,computed} from 'vue'
 export const useUserStore = defineStore('user',{
     state:()=>{
-        return{user:ref(null)}
+        const stored = localStorage.getItem('user');
+        return {
+            user: stored ? JSON.parse(stored) : null,
+        };
     },
     actions:{
         login(username,password){
@@ -13,12 +16,16 @@ export const useUserStore = defineStore('user',{
                     token: 'fake-jwt',
                     role:"admin"
                  }
+                localStorage.setItem('user', JSON.stringify(this.user));
                 return true
             }
             return false
         },
         logout(){
+            
             this.user = null
+            localStorage.removeItem('user');
+       
         }
     },
     getters:{

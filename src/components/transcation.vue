@@ -151,9 +151,9 @@
                 </div>
             </div>
 
-            <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+            <template #footer >
                 <Button label="Save" icon="pi pi-check" @click="saveTransaction" />
+                <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
             </template>
         </Dialog>
 
@@ -263,11 +263,13 @@ const formatCurrency = (value) => {
     if (value !== undefined && value !== null) {
         return value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
     }
+    return '$0.00';
+};
+
 const logout = () => {
+    debugger
     userStore.logout();
     router.push('/login');
-};
-    return '$0.00';
 };
 
 const openNew = () => {

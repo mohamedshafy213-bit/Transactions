@@ -23,6 +23,7 @@ import InputNumber from 'primevue/inputnumber';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import './style.css';
+import 'primeicons/primeicons.css';
  // Assuming your router is here
  import Button from "primevue/button"
  import Textarea from 'primevue/textarea';
