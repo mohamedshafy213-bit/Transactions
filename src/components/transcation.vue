@@ -9,11 +9,11 @@
                 <div>
                     <span class="text-sm font-semibold text-indigo-700/80 dark:text-indigo-400">Total Monthly Salary</span>
                     <div class="flex items-center gap-2 mt-2">
-                        <span v-if="!editingSalary" class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        <span class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                             {{ formatCurrency(transactionStore.salary) }}
                         </span>
-                        <InputNumber v-else v-model="tempSalary" mode="currency" currency="USD" locale="en-US" class="w-full" size="small" autofocus @keyup.enter="saveSalary" @blur="saveSalary" />
-                        <Button v-if="!editingSalary" icon="pi pi-pencil" text rounded severity="secondary" size="small" @click="startEditSalary" />
+                        <Button icon="pi pi-pencil" text rounded severity="secondary" size="small" @click="startEditSalary" />
+                        <Button v-if="transactionStore.salary===0" label="Add Salary" text rounded severity="secondary" size="small" @click="startAddSalary" />
                     </div>
                 </div>
                 <div class="text-xs text-indigo-600/80 dark:text-indigo-400/80 font-medium mt-3 flex items-center gap-1">
@@ -107,6 +107,34 @@
             </DataTable>
         </div>
 
+        <!-- Edit Salary Dialog -->
+        <Dialog v-model:visible="salaryDialog" :style="{ width: '450px' }" header="Update Monthly Salary" :modal="true" class="p-fluid">
+            <div class="flex flex-col gap-4 py-2">
+                <div>
+                    <label for="salaryInput" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Monthly Salary</label>
+                    <InputNumber id="salaryInput" v-model="tempSalary" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="saveSalary" />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" text @click="salaryDialog = false" />
+                <Button label="Save" icon="pi pi-check" @click="saveSalary" />
+            </template>
+        </Dialog>
+
+        <!-- Add Salary Dialog -->
+        <Dialog v-model:visible="addSalaryDialog" :style="{ width: '450px' }" header="Add Monthly Salary" :modal="true" class="p-fluid">
+            <div class="flex flex-col gap-4 py-2">
+                <div>
+                    <label for="addSalaryInput" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Monthly Salary</label>
+                    <InputNumber id="addSalaryInput" v-model="addTempSalary" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="saveAddSalary" />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" text @click="addSalaryDialog = false" />
+                <Button label="Save" icon="pi pi-check" @click="saveAddSalary" />
+            </template>
+        </Dialog>
+
         <!-- Create/Edit Transaction Dialog -->
         <Dialog v-model:visible="transactionDialog" :style="{ width: '450px' }" header="Transaction Details" :modal="true" class="p-fluid">
             <div class="flex flex-col gap-4 py-2">
@@ -176,21 +204,40 @@ const totalExpenses = computed(() => {
 });
 
 // Salary editing state
-const editingSalary = ref(false);
+const salaryDialog = ref(false);
 const tempSalary = ref(0);
+
+const addSalaryDialog = ref(false);
+const addTempSalary = ref(0);
 
 const startEditSalary = () => {
     tempSalary.value = transactionStore.salary;
-    editingSalary.value = true;
+    salaryDialog.value = true;
+};
+
+const startAddSalary = () => {
+    addTempSalary.value = 0;
+    addSalaryDialog.value = true;
 };
 
 const saveSalary = () => {
     transactionStore.UpdateSalary(tempSalary.value);
-    editingSalary.value = false;
+    salaryDialog.value = false;
     toast.add({
         severity: 'success', 
         summary: 'Salary Updated', 
         detail: `Total monthly salary updated to ${formatCurrency(transactionStore.salary)}`, 
+        life: 3000
+    });
+};
+
+const saveAddSalary = () => {
+    transactionStore.UpdateSalary(addTempSalary.value);
+    addSalaryDialog.value = false;
+    toast.add({
+        severity: 'success', 
+        summary: 'Salary Added', 
+        detail: `Total monthly salary set to ${formatCurrency(transactionStore.salary)}`,
         life: 3000
     });
 };
