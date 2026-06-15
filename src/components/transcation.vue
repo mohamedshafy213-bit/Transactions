@@ -62,6 +62,7 @@
                 <template #end>
                     <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" customUpload chooseLabel="Import" class="mr-2" auto :chooseButtonProps="{ severity: 'secondary' }" />
                     <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
+<Button label="Logout" icon="pi pi-sign-out" severity="danger" @click="logout" />
                 </template>
             </Toolbar>
 
@@ -187,8 +188,12 @@ import { ref, onMounted, computed } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { useTransactionStore } from '../stores/Transaction';
+import { useUserStore } from '../stores/user';
+import { useRouter } from 'vue-router';
 
 const transactionStore = useTransactionStore();
+const userStore = useUserStore();
+const router = useRouter();
 const toast = useToast();
 
 onMounted(() => {
@@ -258,6 +263,10 @@ const formatCurrency = (value) => {
     if (value !== undefined && value !== null) {
         return value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
     }
+const logout = () => {
+    userStore.logout();
+    router.push('/login');
+};
     return '$0.00';
 };
 
