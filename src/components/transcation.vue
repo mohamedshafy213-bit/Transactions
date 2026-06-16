@@ -2,6 +2,14 @@
     <div class="max-w-7xl mx-auto px-4 py-8">
         <Toast />
         
+        <!-- App Header Bar -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-850 dark:text-white flex items-center gap-2">
+                <i class="pi pi-wallet text-indigo-600"></i> Salary Tracker
+            </h1>
+            <Button icon="pi pi-sign-out" severity="danger" text rounded label="Logout" class="hover:bg-red-500/10" @click="logout" />
+        </div>
+        
         <!-- Dashboard Summary Header -->
         <div class="grid grid-cols-3 gap-2 sm:gap-6 mb-8">
             <!-- Total Salary Card -->
@@ -61,8 +69,7 @@
 
                 <template #end>
                     <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" customUpload chooseLabel="Import" class="mr-2" auto :chooseButtonProps="{ severity: 'secondary' }" />
-                    <Button label="Export" icon="pi pi-upload" severity="secondary" class="mr-2" @click="exportCSV($event)" />
-                    <Button label="Logout" icon="pi pi-sign-out" severity="danger" @click="logout" />
+                    <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
                 </template>
             </Toolbar>
 
