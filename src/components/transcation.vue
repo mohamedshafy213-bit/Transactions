@@ -63,13 +63,14 @@
         <div class="card p-6 border border-slate-100 rounded-2xl bg-white dark:bg-slate-900 shadow-sm">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" variant="outlined" @click="confirmDeleteSelected" :disabled="!selectedTransactions || !selectedTransactions.length" />
+                    <Button label="New" icon="pi pi-plus" class="mr-2" size="small" @click="openNew" />
+                    <Button label="Delete" icon="pi pi-trash" severity="danger" variant="outlined" class="mr-2" size="small" @click="confirmDeleteSelected" :disabled="!selectedTransactions || !selectedTransactions.length" />
+                    <Button label="Show" icon="pi pi-eye" severity="info" variant="outlined" size="small" @click="showDetails" :disabled="!selectedTransactions || selectedTransactions.length !== 1" />
                 </template>
 
                 <template #end>
-                    <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" customUpload chooseLabel="Import" class="mr-2" auto :chooseButtonProps="{ severity: 'secondary' }" />
-                    <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
+                    <FileUpload mode="basic" accept=".csv,.json" :maxFileSize="1000000" label="Import" customUpload chooseLabel="Import" class="mr-2" auto @uploader="handleImport" :chooseButtonProps="{ severity: 'secondary', size: 'small' }" />
+                    <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV($event)" />
                 </template>
             </Toolbar>
 
@@ -204,6 +205,31 @@
                 <Button label="Yes" icon="pi pi-check" @click="deleteSelectedTransactions" severity="danger" />
             </template>
         </Dialog>
+
+        <!-- Show Details Dialog -->
+        <Dialog v-model:visible="detailsDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Transaction Details" :modal="true">
+            <div v-if="selectedTransactionDetails" class="flex flex-col gap-4 py-2">
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span class="block text-xs text-slate-500 uppercase font-semibold">Date</span>
+                    <span class="text-base text-slate-800 dark:text-white">{{ selectedTransactionDetails.date }}</span>
+                </div>
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span class="block text-xs text-slate-500 uppercase font-semibold">Amount</span>
+                    <span class="text-xl font-bold text-slate-800 dark:text-white">{{ formatCurrency(selectedTransactionDetails.Transcation) }}</span>
+                </div>
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span class="block text-xs text-slate-500 uppercase font-semibold">Category</span>
+                    <span class="text-base text-slate-800 dark:text-white">{{ selectedTransactionDetails.Category || 'N/A' }}</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-500 uppercase font-semibold">Reason / Description</span>
+                    <span class="text-base text-slate-800 dark:text-white whitespace-pre-wrap">{{ selectedTransactionDetails.Reason }}</span>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Close" icon="pi pi-times" @click="detailsDialog = false" />
+            </template>
+        </Dialog>
     </div>
 </template>
 
@@ -319,6 +345,8 @@ const deleteTransactionDialog = ref(false);
 const deleteTransactionsDialog = ref(false);
 const transaction = ref({});
 const selectedTransactions = ref();
+const detailsDialog = ref(false);
+const selectedTransactionDetails = ref(null);
 const filters = ref({
     'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
 });
@@ -396,5 +424,60 @@ const deleteSelectedTransactions = () => {
     deleteTransactionsDialog.value = false;
     selectedTransactions.value = null;
     toast.add({severity:'success', summary: 'Successful', detail: 'Transactions Deleted', life: 3000});
+};
+
+const showDetails = () => {
+    if (selectedTransactions.value && selectedTransactions.value.length === 1) {
+        selectedTransactionDetails.value = selectedTransactions.value[0];
+        detailsDialog.value = true;
+    }
+};
+
+const handleImport = (event) => {
+    const file = event.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const content = e.target.result;
+        try {
+            if (file.name.endsWith('.json')) {
+                const data = JSON.parse(content);
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        transactionStore.AddTransaction(item);
+                    });
+                    toast.add({severity:'success', summary: 'Imported', detail: 'Transactions imported successfully', life: 3000});
+                }
+            } else {
+                const lines = content.split('\n');
+                if (lines.length < 2) return;
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                    const txn = {};
+                    headers.forEach((header, index) => {
+                        txn[header] = values[index];
+                    });
+                    const amount = Number(txn.Amount || txn.Transcation || 0);
+                    const date = txn.Date || txn.date || new Date().toLocaleDateString();
+                    const category = txn.Category || txn.category || '';
+                    const reason = txn.Reason || txn.description || '';
+                    
+                    transactionStore.AddTransaction({
+                        date,
+                        Transcation: amount,
+                        Category: category,
+                        Reason: reason
+                    });
+                }
+                toast.add({severity:'success', summary: 'Imported', detail: 'Transactions imported successfully', life: 3000});
+            }
+        } catch (err) {
+            toast.add({severity:'error', summary: 'Error', detail: 'Failed to parse file', life: 3000});
+        }
+    };
+    reader.readAsText(file);
 };
 </script>
