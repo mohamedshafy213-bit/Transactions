@@ -23,6 +23,7 @@ export const useTransactionStore = defineStore("transaction", {
         id: transactionDetails.id || Math.random().toString(36).substring(2, 9),
         date: transactionDetails.date || new Date().toLocaleDateString(),
         Transcation: Number(transactionDetails.Transcation || 0),
+        Category: transactionDetails.Category || "",
         Reason: transactionDetails.Reason || ""
       };
       this.transactions.push(txn);

@@ -3,51 +3,51 @@
         <Toast />
         
         <!-- Dashboard Summary Header -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-3 gap-2 sm:gap-6 mb-8">
             <!-- Total Salary Card -->
-            <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 shadow-sm p-6 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
+            <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 shadow-sm p-3 sm:p-6 rounded-xl sm:rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
                 <div>
-                    <span class="text-sm font-semibold text-indigo-700/80 dark:text-indigo-400">Total Monthly Salary</span>
-                    <div class="flex items-center gap-2 mt-2">
-                        <span class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    <span class="text-[10px] sm:text-sm font-semibold text-indigo-700/80 dark:text-indigo-400 block truncate">Total Monthly Salary</span>
+                    <div class="flex items-center gap-1 mt-1 sm:mt-2">
+                        <span class="text-xs sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                             {{ formatCurrency(transactionStore.salary) }}
                         </span>
-                        <Button icon="pi pi-pencil" text rounded severity="secondary" size="small" @click="startEditSalary" />
-                        <Button v-if="transactionStore.salary===0" label="Add Salary" text rounded severity="secondary" size="small" @click="startAddSalary" />
+                        <Button icon="pi pi-pencil" text rounded severity="secondary" class="h-6 w-6 sm:h-8 sm:w-8 !p-0" size="small" @click="startEditSalary" />
+                        <Button v-if="transactionStore.salary===0" label="Add" text rounded severity="secondary" class="h-6 px-1 text-[9px] sm:text-xs" size="small" @click="startAddSalary" />
                     </div>
                 </div>
-                <div class="text-xs text-indigo-600/80 dark:text-indigo-400/80 font-medium mt-3 flex items-center gap-1">
-                    <i class="pi pi-info-circle text-[10px]"></i> Click edit icon to change salary
+                <div class="text-[8px] sm:text-xs text-indigo-600/80 dark:text-indigo-400/80 font-medium mt-2 sm:mt-3 flex items-center gap-0.5">
+                    <i class="pi pi-info-circle text-[8px] sm:text-[10px]"></i> <span class="truncate">Edit salary</span>
                 </div>
             </div>
 
             <!-- Total Expenses Card -->
-            <div class="bg-gradient-to-br from-rose-500/10 to-orange-500/10 border border-rose-500/20 shadow-sm p-6 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
+            <div class="bg-gradient-to-br from-rose-500/10 to-orange-500/10 border border-rose-500/20 shadow-sm p-3 sm:p-6 rounded-xl sm:rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
                 <div>
-                    <span class="text-sm font-semibold text-rose-700/80 dark:text-rose-400">Total Expenses</span>
-                    <div class="text-3xl font-extrabold tracking-tight text-rose-600 mt-2">
+                    <span class="text-[10px] sm:text-sm font-semibold text-rose-700/80 dark:text-rose-400 block truncate">Total Expenses</span>
+                    <div class="text-xs sm:text-3xl font-extrabold tracking-tight text-rose-600 mt-1 sm:mt-2">
                         {{ formatCurrency(totalExpenses) }}
                     </div>
                 </div>
-                <div class="text-xs text-rose-600/80 dark:text-rose-400/80 font-medium mt-3 flex items-center gap-1">
-                    <i class="pi pi-chart-bar text-[10px]"></i> Total of all transactions
+                <div class="text-[8px] sm:text-xs text-rose-600/80 dark:text-rose-400/80 font-medium mt-2 sm:mt-3 flex items-center gap-0.5">
+                    <i class="pi pi-chart-bar text-[8px] sm:text-[10px]"></i> <span class="truncate">Total transactions</span>
                 </div>
             </div>
 
             <!-- Remaining Balance Card -->
-            <div class="shadow-sm p-6 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md"
+            <div class="shadow-sm p-3 sm:p-6 rounded-xl sm:rounded-2xl flex flex-col justify-between transition-all hover:shadow-md"
                  :class="transactionStore.remind >= 0 ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20' : 'bg-gradient-to-br from-red-500/10 to-rose-500/10 border border-red-500/20'">
                 <div>
-                    <span class="text-sm font-semibold" :class="transactionStore.remind >= 0 ? 'text-emerald-700/80 dark:text-emerald-400' : 'text-red-700/80 dark:text-red-400'">Remaining Budget</span>
-                    <div class="text-3xl font-extrabold tracking-tight mt-2"
+                    <span class="text-[10px] sm:text-sm font-semibold block truncate" :class="transactionStore.remind >= 0 ? 'text-emerald-700/80 dark:text-emerald-400' : 'text-red-700/80 dark:text-red-400'">Remaining Budget</span>
+                    <div class="text-xs sm:text-3xl font-extrabold tracking-tight mt-1 sm:mt-2"
                          :class="transactionStore.remind >= 0 ? 'text-emerald-600' : 'text-red-600'">
                         {{ formatCurrency(transactionStore.remind) }}
                     </div>
                 </div>
-                <div class="text-xs font-medium mt-3 flex items-center gap-1"
+                <div class="text-[8px] sm:text-xs font-medium mt-2 sm:mt-3 flex items-center gap-0.5"
                      :class="transactionStore.remind >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-red-600/80 dark:text-red-400/80'">
-                    <i class="pi" :class="transactionStore.remind >= 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
-                    {{ transactionStore.remind >= 0 ? 'You are within budget limits' : 'Alert: You are over budget!' }}
+                    <i class="pi text-[8px] sm:text-[10px]" :class="transactionStore.remind >= 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
+                    <span class="truncate">{{ transactionStore.remind >= 0 ? 'Within budget' : 'Over budget' }}</span>
                 </div>
             </div>
         </div>
@@ -61,8 +61,8 @@
 
                 <template #end>
                     <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" customUpload chooseLabel="Import" class="mr-2" auto :chooseButtonProps="{ severity: 'secondary' }" />
-                    <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
-<Button label="Logout" icon="pi pi-sign-out" severity="danger" @click="logout" />
+                    <Button label="Export" icon="pi pi-upload" severity="secondary" class="mr-2" @click="exportCSV($event)" />
+                    <Button label="Logout" icon="pi pi-sign-out" severity="danger" @click="logout" />
                 </template>
             </Toolbar>
 
@@ -74,6 +74,7 @@
                 :paginator="true"
                 :rows="10"
                 :filters="filters"
+                :scrollable="true"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} transactions"
@@ -97,6 +98,7 @@
                         {{ formatCurrency(slotProps.data.Transcation) }}
                     </template>
                 </Column>
+                <Column field="Category" header="Category" sortable style="min-width: 12rem"></Column>
                 <Column field="Reason" header="Reason" sortable style="min-width: 16rem"></Column>
                 
                 <Column :exportable="false" style="min-width: 8rem">
@@ -109,7 +111,7 @@
         </div>
 
         <!-- Edit Salary Dialog -->
-        <Dialog v-model:visible="salaryDialog" :style="{ width: '450px' }" header="Update Monthly Salary" :modal="true" class="p-fluid">
+        <Dialog v-model:visible="salaryDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Update Monthly Salary" :modal="true" class="p-fluid">
             <div class="flex flex-col gap-4 py-2">
                 <div>
                     <label for="salaryInput" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Monthly Salary</label>
@@ -123,7 +125,7 @@
         </Dialog>
 
         <!-- Add Salary Dialog -->
-        <Dialog v-model:visible="addSalaryDialog" :style="{ width: '450px' }" header="Add Monthly Salary" :modal="true" class="p-fluid">
+        <Dialog v-model:visible="addSalaryDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Add Monthly Salary" :modal="true" class="p-fluid">
             <div class="flex flex-col gap-4 py-2">
                 <div>
                     <label for="addSalaryInput" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Monthly Salary</label>
@@ -137,12 +139,27 @@
         </Dialog>
 
         <!-- Create/Edit Transaction Dialog -->
-        <Dialog v-model:visible="transactionDialog" :style="{ width: '450px' }" header="Transaction Details" :modal="true" class="p-fluid">
+        <Dialog v-model:visible="transactionDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Transaction Details" :modal="true" class="p-fluid">
             <div class="flex flex-col gap-4 py-2">
                 <div>
                     <label for="price" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Amount</label>
                     <InputNumber id="price" v-model="transaction.Transcation" mode="currency" currency="USD" locale="en-US" fluid autofocus />
                     <small v-if="submitted && !transaction.Transcation" class="text-rose-500 block mt-1">Amount is required.</small>
+                </div>
+                <div>
+                    <label for="category" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Category</label>
+                    <div class="flex gap-2">
+                        <Select id="category" v-model="transaction.Category" :options="categories" placeholder="Select a Category" filter class="flex-1" />
+                        <Button icon="pi pi-plus" severity="secondary" @click="showNewCategoryInput = !showNewCategoryInput" />
+                    </div>
+                    <small v-if="submitted && !transaction.Category" class="text-rose-500 block mt-1">Category is required.</small>
+                </div>
+                <div v-if="showNewCategoryInput" class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+                    <label class="block font-bold text-xs text-slate-600 dark:text-slate-300">Add Custom Category</label>
+                    <div class="flex gap-2">
+                        <InputText v-model="newCategoryName" placeholder="New Category Name..." size="small" class="flex-1" />
+                        <Button label="Add" size="small" @click="addNewCategory" />
+                    </div>
                 </div>
                 <div>
                     <label for="description" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Reason / Description</label>
@@ -158,7 +175,7 @@
         </Dialog>
 
         <!-- Single Delete Dialog -->
-        <Dialog v-model:visible="deleteTransactionDialog" :style="{ width: '450px' }" header="Confirm Delete" :modal="true">
+        <Dialog v-model:visible="deleteTransactionDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Confirm Delete" :modal="true">
             <div class="flex items-center gap-4 py-2">
                 <i class="pi pi-exclamation-triangle text-rose-500 text-3xl" />
                 <span v-if="transaction">Are you sure you want to delete this transaction for <b>{{ transaction.Reason }}</b>?</span>
@@ -170,7 +187,7 @@
         </Dialog>
 
         <!-- Bulk Delete Dialog -->
-        <Dialog v-model:visible="deleteTransactionsDialog" :style="{ width: '450px' }" header="Confirm Bulk Delete" :modal="true">
+        <Dialog v-model:visible="deleteTransactionsDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Confirm Bulk Delete" :modal="true">
             <div class="flex items-center gap-4 py-2">
                 <i class="pi pi-exclamation-triangle text-rose-500 text-3xl" />
                 <span>Are you sure you want to delete the selected transactions?</span>
@@ -202,6 +219,47 @@ onMounted(() => {
 
 // Computed transactions array from store
 const transactions = computed(() => transactionStore.transactions);
+
+// Categories list loaded from localStorage or using user defaults
+const defaultCategories = [
+    ' Investments thndr',
+    'Car',
+    'Maintenance',
+    'Services ',
+    'Obligations',
+    'Credit Card Payments',
+    'Gifts ',
+    'Family',
+    'Cafes ',
+    'Outings',
+    'Clothes ',
+    'Electronics',
+    'Travel ',
+    'Transport',
+    'Work ',
+    'Sports',
+    'Food ',
+    'House'
+];
+const storedCategories = localStorage.getItem('custom_categories');
+const categories = ref(storedCategories ? JSON.parse(storedCategories) : defaultCategories);
+
+const showNewCategoryInput = ref(false);
+const newCategoryName = ref('');
+
+const addNewCategory = () => {
+    const name = newCategoryName.value.trim();
+    if (name) {
+        if (!categories.value.includes(name)) {
+            categories.value.push(name);
+            localStorage.setItem('custom_categories', JSON.stringify(categories.value));
+        }
+        transaction.value.Category = name;
+        newCategoryName.value = '';
+        showNewCategoryInput.value = false;
+        toast.add({severity:'success', summary: 'Success', detail: 'Category added and selected', life: 2000});
+    }
+};
 
 // Expenses calculation
 const totalExpenses = computed(() => {
@@ -286,7 +344,7 @@ const hideDialog = () => {
 const saveTransaction = () => {
     submitted.value = true;
 
-    if (transaction.value.Transcation !== undefined && transaction.value.Reason?.trim()) {
+    if (transaction.value.Transcation !== undefined && transaction.value.Category && transaction.value.Reason?.trim()) {
         if (transaction.value.id) {
             transactionStore.UpdateTransaction(transaction.value);
             toast.add({severity:'success', summary: 'Successful', detail: 'Transaction Updated', life: 3000});
