@@ -1,236 +1,299 @@
 <template>
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <Toast />
-        
-        <!-- App Header Bar -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-850 dark:text-white flex items-center gap-2">
-                <i class="pi pi-wallet text-indigo-600"></i> Salary Tracker
-            </h1>
-            <Button icon="pi pi-sign-out" severity="danger" text rounded label="Logout" class="hover:bg-red-500/10" @click="logout" />
+  <div class="app-shell">
+    <Toast />
+
+    <!-- ── App Header ── -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <div class="brand-icon"><i class="pi pi-wallet"></i></div>
+          <span class="brand-name">Salary Tracker</span>
         </div>
-        
-        <!-- Dashboard Summary Header -->
-        <div class="grid grid-cols-3 gap-2 sm:gap-6 mb-8">
-            <!-- Total Salary Card -->
-            <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 shadow-sm p-3 sm:p-6 rounded-xl sm:rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
-                <div>
-                    <span class="text-[10px] sm:text-sm font-semibold text-indigo-700/80 dark:text-indigo-400 block truncate">Total Monthly Salary</span>
-                    <div class="flex items-center gap-1 mt-1 sm:mt-2">
-                        <span class="text-xs sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                            {{ formatCurrency(transactionStore.salary) }}
-                        </span>
-                        <Button icon="pi pi-pencil" text rounded severity="secondary" class="h-6 w-6 sm:h-8 sm:w-8 !p-0" size="small" @click="startEditSalary" />
-                        <Button v-if="transactionStore.salary===0" label="Add" text rounded severity="secondary" class="h-6 px-1 text-[9px] sm:text-xs" size="small" @click="startAddSalary" />
-                    </div>
-                </div>
-                <div class="text-[8px] sm:text-xs text-indigo-600/80 dark:text-indigo-400/80 font-medium mt-2 sm:mt-3 flex items-center gap-0.5">
-                    <i class="pi pi-info-circle text-[8px] sm:text-[10px]"></i> <span class="truncate">Edit salary</span>
-                </div>
-            </div>
+        <button class="logout-btn" @click="logout">
+          <i class="pi pi-sign-out"></i>
+          <span class="logout-label">Logout</span>
+        </button>
+      </div>
+    </header>
 
-            <!-- Total Expenses Card -->
-            <div class="bg-gradient-to-br from-rose-500/10 to-orange-500/10 border border-rose-500/20 shadow-sm p-3 sm:p-6 rounded-xl sm:rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
-                <div>
-                    <span class="text-[10px] sm:text-sm font-semibold text-rose-700/80 dark:text-rose-400 block truncate">Total Expenses</span>
-                    <div class="text-xs sm:text-3xl font-extrabold tracking-tight text-rose-600 mt-1 sm:mt-2">
-                        {{ formatCurrency(totalExpenses) }}
-                    </div>
-                </div>
-                <div class="text-[8px] sm:text-xs text-rose-600/80 dark:text-rose-400/80 font-medium mt-2 sm:mt-3 flex items-center gap-0.5">
-                    <i class="pi pi-chart-bar text-[8px] sm:text-[10px]"></i> <span class="truncate">Total transactions</span>
-                </div>
-            </div>
+    <main class="app-main">
 
-            <!-- Remaining Balance Card -->
-            <div class="shadow-sm p-3 sm:p-6 rounded-xl sm:rounded-2xl flex flex-col justify-between transition-all hover:shadow-md"
-                 :class="transactionStore.remind >= 0 ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20' : 'bg-gradient-to-br from-red-500/10 to-rose-500/10 border border-red-500/20'">
-                <div>
-                    <span class="text-[10px] sm:text-sm font-semibold block truncate" :class="transactionStore.remind >= 0 ? 'text-emerald-700/80 dark:text-emerald-400' : 'text-red-700/80 dark:text-red-400'">Remaining Budget</span>
-                    <div class="text-xs sm:text-3xl font-extrabold tracking-tight mt-1 sm:mt-2"
-                         :class="transactionStore.remind >= 0 ? 'text-emerald-600' : 'text-red-600'">
-                        {{ formatCurrency(transactionStore.remind) }}
-                    </div>
-                </div>
-                <div class="text-[8px] sm:text-xs font-medium mt-2 sm:mt-3 flex items-center gap-0.5"
-                     :class="transactionStore.remind >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-red-600/80 dark:text-red-400/80'">
-                    <i class="pi text-[8px] sm:text-[10px]" :class="transactionStore.remind >= 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
-                    <span class="truncate">{{ transactionStore.remind >= 0 ? 'Within budget' : 'Over budget' }}</span>
-                </div>
-            </div>
+      <!-- ── Summary Cards ── -->
+      <div class="cards-grid">
+        <!-- Total Balance -->
+        <div class="card card--indigo">
+          <div class="card-label">Total Balance</div>
+          <div class="card-value">{{ formatCurrency(transactionStore.totalIncome) }}</div>
+          <div class="card-actions">
+            <button class="icon-btn" @click="startEditSalary" title="Edit Salary">
+              <i class="pi pi-pencil"></i>
+            </button>
+          </div>
+          <div class="card-hint"><i class="pi pi-info-circle"></i> Salary + Extra Income</div>
         </div>
 
-        <div class="card p-6 border border-slate-100 rounded-2xl bg-white dark:bg-slate-900 shadow-sm">
-            <Toolbar class="mb-6">
-                <template #start>
-                    <Button label="New" icon="pi pi-plus" class="mr-2" size="small" @click="openNew" />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" variant="outlined" class="mr-2" size="small" @click="confirmDeleteSelected" :disabled="!selectedTransactions || !selectedTransactions.length" />
-                    <Button label="Show" icon="pi pi-eye" severity="info" variant="outlined" size="small" @click="showDetails" :disabled="!selectedTransactions || selectedTransactions.length !== 1" />
-                </template>
-
-                <template #end>
-                    <FileUpload mode="basic" accept=".csv,.json" :maxFileSize="1000000" label="Import" customUpload chooseLabel="Import" class="mr-2" auto @uploader="handleImport" :chooseButtonProps="{ severity: 'secondary', size: 'small' }" />
-                    <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV($event)" />
-                </template>
-            </Toolbar>
-
-            <DataTable
-                ref="dt"
-                v-model:selection="selectedTransactions"
-                :value="transactions"
-                dataKey="id"
-                :paginator="true"
-                :rows="10"
-                :filters="filters"
-                :scrollable="true"
-                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                :rowsPerPageOptions="[5, 10, 25]"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} transactions"
-            >
-                <template #header>
-                    <div class="flex flex-wrap gap-2 items-center justify-between">
-                        <h4 class="m-0 text-xl font-bold text-slate-800 dark:text-white">Manage Transactions</h4>
-                        <IconField>
-                            <InputIcon>
-                                <i class="pi pi-search" />
-                            </InputIcon>
-                            <InputText v-model="filters['global'].value" placeholder="Search..." />
-                        </IconField>
-                    </div>
-                </template>
-
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="date" header="Date" sortable style="min-width: 8rem"></Column>
-                <Column field="Transcation" header="Amount" sortable style="min-width: 10rem">
-                    <template #body="slotProps">
-                        {{ formatCurrency(slotProps.data.Transcation) }}
-                    </template>
-                </Column>
-                <Column field="Category" header="Category" sortable style="min-width: 12rem"></Column>
-                <Column field="Reason" header="Reason" sortable style="min-width: 16rem"></Column>
-                
-                <Column :exportable="false" style="min-width: 8rem">
-                    <template #body="slotProps">
-                        <Button icon="pi pi-pencil" variant="outlined" rounded class="mr-2" @click="editTransaction(slotProps.data)" />
-                        <Button icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteTransaction(slotProps.data)" />
-                    </template>
-                </Column>
-            </DataTable>
+        <!-- Total Expenses -->
+        <div class="card card--rose">
+          <div class="card-label">Total Expenses</div>
+          <div class="card-value">{{ formatCurrency(transactionStore.totalExpenses) }}</div>
+          <div class="card-hint"><i class="pi pi-chart-bar"></i> All outgoing</div>
         </div>
 
-        <!-- Edit Salary Dialog -->
-        <Dialog v-model:visible="salaryDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Update Monthly Salary" :modal="true" class="p-fluid">
-            <div class="flex flex-col gap-4 py-2">
-                <div>
-                    <label for="salaryInput" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Monthly Salary</label>
-                    <InputNumber id="salaryInput" v-model="tempSalary" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="saveSalary" />
-                </div>
-            </div>
-            <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="salaryDialog = false" />
-                <Button label="Save" icon="pi pi-check" @click="saveSalary" />
-            </template>
-        </Dialog>
+        <!-- Remaining -->
+        <div class="card" :class="transactionStore.remind >= 0 ? 'card--emerald' : 'card--red'">
+          <div class="card-label">Remaining</div>
+          <div class="card-value">{{ formatCurrency(transactionStore.remind) }}</div>
+          <div class="card-hint">
+            <i class="pi" :class="transactionStore.remind >= 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
+            {{ transactionStore.remind >= 0 ? 'Within budget' : 'Over budget' }}
+          </div>
+        </div>
+      </div>
 
-        <!-- Add Salary Dialog -->
-        <Dialog v-model:visible="addSalaryDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Add Monthly Salary" :modal="true" class="p-fluid">
-            <div class="flex flex-col gap-4 py-2">
-                <div>
-                    <label for="addSalaryInput" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Monthly Salary</label>
-                    <InputNumber id="addSalaryInput" v-model="addTempSalary" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="saveAddSalary" />
-                </div>
-            </div>
-            <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="addSalaryDialog = false" />
-                <Button label="Save" icon="pi pi-check" @click="saveAddSalary" />
-            </template>
-        </Dialog>
+      <!-- ── Quick Add Income ── -->
+      <div class="income-panel">
+        <div class="income-panel-header">
+          <div class="income-icon"><i class="pi pi-plus-circle"></i></div>
+          <h2 class="income-title">Add New Income</h2>
+        </div>
+        <div class="income-form">
+          <div class="income-field">
+            <label class="field-label">Amount</label>
+            <InputNumber v-model="newIncome.amount" mode="currency" currency="USD" locale="en-US" placeholder="$0.00" fluid class="income-input" />
+          </div>
+          <div class="income-field">
+            <label class="field-label">Source</label>
+            <InputText v-model="newIncome.source" placeholder="e.g. Freelance, Bonus..." fluid class="income-input" />
+          </div>
+          <div class="income-field income-field--full">
+            <label class="field-label">Note (optional)</label>
+            <InputText v-model="newIncome.note" placeholder="Add a note..." fluid class="income-input" />
+          </div>
+          <div class="income-field income-field--full">
+            <Button label="Add Income" icon="pi pi-plus" class="add-income-btn" @click="addIncome" />
+          </div>
+        </div>
+      </div>
 
-        <!-- Create/Edit Transaction Dialog -->
-        <Dialog v-model:visible="transactionDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Transaction Details" :modal="true" class="p-fluid">
-            <div class="flex flex-col gap-4 py-2">
-                <div>
-                    <label for="price" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Amount</label>
-                    <InputNumber id="price" v-model="transaction.Transcation" mode="currency" currency="USD" locale="en-US" fluid autofocus />
-                    <small v-if="submitted && !transaction.Transcation" class="text-rose-500 block mt-1">Amount is required.</small>
-                </div>
-                <div>
-                    <label for="category" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Category</label>
-                    <div class="flex gap-2">
-                        <Select id="category" v-model="transaction.Category" :options="categories" placeholder="Select a Category" filter class="flex-1" />
-                        <Button icon="pi pi-plus" severity="secondary" @click="showNewCategoryInput = !showNewCategoryInput" />
-                    </div>
-                    <small v-if="submitted && !transaction.Category" class="text-rose-500 block mt-1">Category is required.</small>
-                </div>
-                <div v-if="showNewCategoryInput" class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                    <label class="block font-bold text-xs text-slate-600 dark:text-slate-300">Add Custom Category</label>
-                    <div class="flex gap-2">
-                        <InputText v-model="newCategoryName" placeholder="New Category Name..." size="small" class="flex-1" />
-                        <Button label="Add" size="small" @click="addNewCategory" />
-                    </div>
-                </div>
-                <div>
-                    <label for="description" class="block font-bold mb-2 text-slate-700 dark:text-slate-200">Reason / Description</label>
-                    <Textarea id="description" v-model="transaction.Reason" required="true" rows="3" cols="20" placeholder="e.g. Grocery, Rent, Internet bill..." fluid />
-                    <small v-if="submitted && !transaction.Reason?.trim()" class="text-rose-500 block mt-1">Reason is required.</small>
-                </div>
-            </div>
+      <!-- ── View Switcher + Table ── -->
+      <div class="table-panel">
 
-            <template #footer >
-                <Button label="Save" icon="pi pi-check" @click="saveTransaction" />
-                <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-            </template>
-        </Dialog>
+        <!-- Switcher -->
+        <div class="switcher-bar">
+          <button class="switcher-btn" :class="{ active: viewMode === 'expenses' }" @click="viewMode = 'expenses'">
+            <i class="pi pi-arrow-up-right"></i> Expenses
+            <span class="switcher-badge">{{ transactionStore.transactions.length }}</span>
+          </button>
+          <button class="switcher-btn" :class="{ active: viewMode === 'incomes' }" @click="viewMode = 'incomes'">
+            <i class="pi pi-arrow-down-left"></i> Incomes
+            <span class="switcher-badge">{{ transactionStore.incomes.length }}</span>
+          </button>
+        </div>
 
-        <!-- Single Delete Dialog -->
-        <Dialog v-model:visible="deleteTransactionDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Confirm Delete" :modal="true">
-            <div class="flex items-center gap-4 py-2">
-                <i class="pi pi-exclamation-triangle text-rose-500 text-3xl" />
-                <span v-if="transaction">Are you sure you want to delete this transaction for <b>{{ transaction.Reason }}</b>?</span>
+        <!-- ── EXPENSES VIEW ── -->
+        <div v-if="viewMode === 'expenses'">
+          <div class="table-actions">
+            <div class="action-group">
+              <Button label="New" icon="pi pi-plus" size="small" @click="openNew" />
+              <Button label="Delete" icon="pi pi-trash" severity="danger" variant="outlined" size="small"
+                      @click="confirmDeleteSelected" :disabled="!selectedTransactions || !selectedTransactions.length" />
             </div>
-            <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteTransactionDialog = false" severity="secondary" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteTransaction" severity="danger" />
-            </template>
-        </Dialog>
+            <div class="action-group">
+              <FileUpload mode="basic" accept=".csv,.json" :maxFileSize="1000000" customUpload chooseLabel="Import"
+                          auto @uploader="handleImport" :chooseButtonProps="{ severity: 'secondary', size: 'small', icon: 'pi pi-download' }" />
+              <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV" />
+            </div>
+          </div>
 
-        <!-- Bulk Delete Dialog -->
-        <Dialog v-model:visible="deleteTransactionsDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Confirm Bulk Delete" :modal="true">
-            <div class="flex items-center gap-4 py-2">
-                <i class="pi pi-exclamation-triangle text-rose-500 text-3xl" />
-                <span>Are you sure you want to delete the selected transactions?</span>
-            </div>
-            <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteTransactionsDialog = false" severity="secondary" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteSelectedTransactions" severity="danger" />
+          <!-- Desktop table -->
+          <DataTable ref="dt" v-model:selection="selectedTransactions" :value="transactionStore.transactions"
+                     dataKey="id" :paginator="true" :rows="8" :filters="filters"
+                     paginatorTemplate="PrevPageLink PageLinks NextPageLink"
+                     class="modern-table desktop-table">
+            <template #header>
+              <div class="table-header">
+                <span class="table-title">Expenses</span>
+                <IconField class="search-field">
+                  <InputIcon><i class="pi pi-search" /></InputIcon>
+                  <InputText v-model="filters['global'].value" placeholder="Search..." />
+                </IconField>
+              </div>
             </template>
-        </Dialog>
+            <Column selectionMode="multiple" style="width:2.5rem" :exportable="false"></Column>
+            <Column field="date" header="Date" sortable style="min-width:7rem"></Column>
+            <Column field="Transcation" header="Amount" sortable style="min-width:8rem">
+              <template #body="{ data }">
+                <span class="amount-out">{{ formatCurrency(data.Transcation) }}</span>
+              </template>
+            </Column>
+            <Column field="Category" header="Category" sortable style="min-width:9rem">
+              <template #body="{ data }">
+                <span class="category-chip">{{ data.Category || '—' }}</span>
+              </template>
+            </Column>
+            <Column field="Reason" header="Reason" sortable style="min-width:12rem"></Column>
+            <Column :exportable="false" style="min-width:6rem">
+              <template #body="{ data }">
+                <div class="row-actions">
+                  <button class="row-btn" @click="editTransaction(data)"><i class="pi pi-pencil"></i></button>
+                  <button class="row-btn row-btn--danger" @click="confirmDeleteTransaction(data)"><i class="pi pi-trash"></i></button>
+                </div>
+              </template>
+            </Column>
+          </DataTable>
 
-        <!-- Show Details Dialog -->
-        <Dialog v-model:visible="detailsDialog" :style="{ width: '90vw', maxWidth: '450px' }" header="Transaction Details" :modal="true">
-            <div v-if="selectedTransactionDetails" class="flex flex-col gap-4 py-2">
-                <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <span class="block text-xs text-slate-500 uppercase font-semibold">Date</span>
-                    <span class="text-base text-slate-800 dark:text-white">{{ selectedTransactionDetails.date }}</span>
-                </div>
-                <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <span class="block text-xs text-slate-500 uppercase font-semibold">Amount</span>
-                    <span class="text-xl font-bold text-slate-800 dark:text-white">{{ formatCurrency(selectedTransactionDetails.Transcation) }}</span>
-                </div>
-                <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <span class="block text-xs text-slate-500 uppercase font-semibold">Category</span>
-                    <span class="text-base text-slate-800 dark:text-white">{{ selectedTransactionDetails.Category || 'N/A' }}</span>
-                </div>
-                <div>
-                    <span class="block text-xs text-slate-500 uppercase font-semibold">Reason / Description</span>
-                    <span class="text-base text-slate-800 dark:text-white whitespace-pre-wrap">{{ selectedTransactionDetails.Reason }}</span>
-                </div>
+          <!-- Mobile cards -->
+          <div class="mobile-list">
+            <div class="mobile-search">
+              <i class="pi pi-search"></i>
+              <input v-model="mobileSearch" placeholder="Search expenses..." class="mobile-search-input" />
             </div>
-            <template #footer>
-                <Button label="Close" icon="pi pi-times" @click="detailsDialog = false" />
+            <div v-if="filteredExpenses.length === 0" class="mobile-empty">No expenses found.</div>
+            <div v-for="item in filteredExpenses" :key="item.id" class="mobile-card">
+              <div class="mc-top">
+                <span class="mc-amount amount-out">{{ formatCurrency(item.Transcation) }}</span>
+                <span class="category-chip">{{ item.Category || '—' }}</span>
+              </div>
+              <div class="mc-reason">{{ item.Reason }}</div>
+              <div class="mc-bottom">
+                <span class="mc-date"><i class="pi pi-calendar"></i> {{ item.date }}</span>
+                <div class="row-actions">
+                  <button class="row-btn" @click="editTransaction(item)"><i class="pi pi-pencil"></i></button>
+                  <button class="row-btn row-btn--danger" @click="confirmDeleteTransaction(item)"><i class="pi pi-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── INCOMES VIEW ── -->
+        <div v-if="viewMode === 'incomes'">
+          <!-- Desktop table -->
+          <DataTable :value="transactionStore.incomes" dataKey="id" :paginator="true" :rows="8"
+                     paginatorTemplate="PrevPageLink PageLinks NextPageLink"
+                     class="modern-table desktop-table">
+            <template #header>
+              <div class="table-header">
+                <span class="table-title">All Incomes</span>
+                <span class="income-total-badge">Total: {{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
+              </div>
             </template>
-        </Dialog>
-    </div>
+            <Column field="date" header="Date" sortable style="min-width:7rem"></Column>
+            <Column field="amount" header="Amount" sortable style="min-width:8rem">
+              <template #body="{ data }">
+                <span class="amount-in">+{{ formatCurrency(data.amount) }}</span>
+              </template>
+            </Column>
+            <Column field="source" header="Source" sortable style="min-width:10rem"></Column>
+            <Column field="note" header="Note" style="min-width:12rem"></Column>
+            <Column :exportable="false" style="min-width:4rem">
+              <template #body="{ data }">
+                <button class="row-btn row-btn--danger" @click="removeIncome(data.id)"><i class="pi pi-trash"></i></button>
+              </template>
+            </Column>
+          </DataTable>
+
+          <!-- Mobile cards -->
+          <div class="mobile-list">
+            <div class="table-header" style="padding:0.875rem 0.875rem 0">
+              <span class="table-title">All Incomes</span>
+              <span class="income-total-badge">{{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
+            </div>
+            <div v-if="transactionStore.incomes.length === 0" class="mobile-empty">No incomes yet.</div>
+            <div v-for="item in transactionStore.incomes" :key="item.id" class="mobile-card mobile-card--income">
+              <div class="mc-top">
+                <span class="mc-amount amount-in">+{{ formatCurrency(item.amount) }}</span>
+                <span class="mc-source">{{ item.source }}</span>
+              </div>
+              <div v-if="item.note" class="mc-reason">{{ item.note }}</div>
+              <div class="mc-bottom">
+                <span class="mc-date"><i class="pi pi-calendar"></i> {{ item.date }}</span>
+                <button class="row-btn row-btn--danger" @click="removeIncome(item.id)"><i class="pi pi-trash"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ─────── DIALOGS ─────── -->
+
+    <!-- Edit Salary -->
+    <Dialog v-model:visible="salaryDialog" :style="{ width: '92vw', maxWidth: '420px' }" header="Update Monthly Salary" :modal="true" class="p-fluid">
+      <div class="dialog-body">
+        <label class="field-label">Monthly Salary (Base)</label>
+        <InputNumber v-model="tempSalary" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="saveSalary" />
+      </div>
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" text @click="salaryDialog = false" />
+        <Button label="Save" icon="pi pi-check" @click="saveSalary" />
+      </template>
+    </Dialog>
+
+    <!-- Add/Edit Transaction -->
+    <Dialog v-model:visible="transactionDialog" :style="{ width: '92vw', maxWidth: '460px' }"
+            :header="transaction.id ? 'Edit Expense' : 'New Expense'" :modal="true" class="p-fluid">
+      <div class="dialog-body">
+        <div class="field-group">
+          <label class="field-label">Amount</label>
+          <InputNumber v-model="transaction.Transcation" mode="currency" currency="USD" locale="en-US" fluid autofocus />
+          <small v-if="submitted && !transaction.Transcation" class="field-error">Amount is required.</small>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Category</label>
+          <div class="cat-row">
+            <Select v-model="transaction.Category" :options="categories" placeholder="Select category" filter class="flex-1" />
+            <button class="icon-btn icon-btn--secondary" @click="showNewCategoryInput = !showNewCategoryInput">
+              <i class="pi pi-plus"></i>
+            </button>
+          </div>
+          <small v-if="submitted && !transaction.Category" class="field-error">Category is required.</small>
+        </div>
+        <div v-if="showNewCategoryInput" class="custom-cat-box">
+          <label class="field-label">New Category Name</label>
+          <div class="cat-row">
+            <InputText v-model="newCategoryName" placeholder="Category name..." class="flex-1" />
+            <Button label="Add" size="small" @click="addNewCategory" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Reason / Description</label>
+          <Textarea v-model="transaction.Reason" rows="3" placeholder="e.g. Grocery, Rent, Internet..." fluid />
+          <small v-if="submitted && !transaction.Reason?.trim()" class="field-error">Reason is required.</small>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+        <Button :label="transaction.id ? 'Update' : 'Save'" icon="pi pi-check" @click="saveTransaction" />
+      </template>
+    </Dialog>
+
+    <!-- Delete Single -->
+    <Dialog v-model:visible="deleteTransactionDialog" :style="{ width: '92vw', maxWidth: '400px' }" header="Delete Expense" :modal="true">
+      <div class="confirm-body">
+        <div class="confirm-icon"><i class="pi pi-exclamation-triangle"></i></div>
+        <p>Delete expense: <strong>{{ transaction.Reason }}</strong>?</p>
+      </div>
+      <template #footer>
+        <Button label="Cancel" text @click="deleteTransactionDialog = false" severity="secondary" />
+        <Button label="Delete" icon="pi pi-trash" @click="deleteTransaction" severity="danger" />
+      </template>
+    </Dialog>
+
+    <!-- Delete Bulk -->
+    <Dialog v-model:visible="deleteTransactionsDialog" :style="{ width: '92vw', maxWidth: '400px' }" header="Delete Selected" :modal="true">
+      <div class="confirm-body">
+        <div class="confirm-icon"><i class="pi pi-exclamation-triangle"></i></div>
+        <p>Delete all selected transactions?</p>
+      </div>
+      <template #footer>
+        <Button label="Cancel" text @click="deleteTransactionsDialog = false" severity="secondary" />
+        <Button label="Delete All" icon="pi pi-trash" @click="deleteSelectedTransactions" severity="danger" />
+      </template>
+    </Dialog>
+
+
+  </div>
 </template>
 
 <script setup>
@@ -246,238 +309,566 @@ const userStore = useUserStore();
 const router = useRouter();
 const toast = useToast();
 
-onMounted(() => {
-    transactionStore.Setremind();
-});
+onMounted(() => { transactionStore.Setremind(); });
 
-// Computed transactions array from store
-const transactions = computed(() => transactionStore.transactions);
+// ── View mode ──
+const viewMode = ref('expenses');
 
-// Categories list loaded from localStorage or using user defaults
-const defaultCategories = [
-    ' Investments thndr',
-    'Car',
-    'Maintenance',
-    'Services ',
-    'Obligations',
-    'Credit Card Payments',
-    'Gifts ',
-    'Family',
-    'Cafes ',
-    'Outings',
-    'Clothes ',
-    'Electronics',
-    'Travel ',
-    'Transport',
-    'Work ',
-    'Sports',
-    'Food ',
-    'House'
-];
-const storedCategories = localStorage.getItem('custom_categories');
-const categories = ref(storedCategories ? JSON.parse(storedCategories) : defaultCategories);
+// ── Currency ──
+const formatCurrency = (v) =>
+  (v !== undefined && v !== null)
+    ? Number(v).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+    : '$0.00';
 
-const showNewCategoryInput = ref(false);
-const newCategoryName = ref('');
+// ── Logout ──
+const logout = () => { userStore.logout(); router.push('/login'); };
 
-const addNewCategory = () => {
-    const name = newCategoryName.value.trim();
-    if (name) {
-        if (!categories.value.includes(name)) {
-            categories.value.push(name);
-            localStorage.setItem('custom_categories', JSON.stringify(categories.value));
-        }
-        transaction.value.Category = name;
-        newCategoryName.value = '';
-        showNewCategoryInput.value = false;
-        toast.add({severity:'success', summary: 'Success', detail: 'Category added and selected', life: 2000});
-    }
+// ── New Income ──
+const newIncome = ref({ amount: null, source: '', note: '' });
+const addIncome = () => {
+  if (!newIncome.value.amount || !newIncome.value.source?.trim()) {
+    toast.add({ severity: 'warn', summary: 'Missing fields', detail: 'Amount and source are required.', life: 3000 });
+    return;
+  }
+  transactionStore.AddIncome(newIncome.value);
+  toast.add({ severity: 'success', summary: 'Income Added', detail: `+${formatCurrency(newIncome.value.amount)} from ${newIncome.value.source}`, life: 3000 });
+  newIncome.value = { amount: null, source: '', note: '' };
 };
 
-// Expenses calculation
-const totalExpenses = computed(() => {
-    return transactionStore.transactions.reduce((acc, t) => acc + Number(t.Transcation || 0), 0);
-});
+const removeIncome = (id) => {
+  transactionStore.RemoveIncome(id);
+  toast.add({ severity: 'success', summary: 'Income Removed', detail: 'Income entry deleted.', life: 2000 });
+};
 
-// Salary editing state
+// ── Salary ──
 const salaryDialog = ref(false);
 const tempSalary = ref(0);
-
-const addSalaryDialog = ref(false);
-const addTempSalary = ref(0);
-
-const startEditSalary = () => {
-    tempSalary.value = transactionStore.salary;
-    salaryDialog.value = true;
-};
-
-const startAddSalary = () => {
-    addTempSalary.value = 0;
-    addSalaryDialog.value = true;
-};
-
+const startEditSalary = () => { tempSalary.value = transactionStore.salary; salaryDialog.value = true; };
 const saveSalary = () => {
-    transactionStore.UpdateSalary(tempSalary.value);
-    salaryDialog.value = false;
-    toast.add({
-        severity: 'success', 
-        summary: 'Salary Updated', 
-        detail: `Total monthly salary updated to ${formatCurrency(transactionStore.salary)}`, 
-        life: 3000
-    });
+  transactionStore.UpdateSalary(tempSalary.value);
+  salaryDialog.value = false;
+  toast.add({ severity: 'success', summary: 'Salary Updated', detail: `Base salary set to ${formatCurrency(transactionStore.salary)}`, life: 3000 });
 };
 
-const saveAddSalary = () => {
-    transactionStore.UpdateSalary(addTempSalary.value);
-    addSalaryDialog.value = false;
-    toast.add({
-        severity: 'success', 
-        summary: 'Salary Added', 
-        detail: `Total monthly salary set to ${formatCurrency(transactionStore.salary)}`,
-        life: 3000
-    });
+// ── Categories ──
+const defaultCategories = [
+  'Investments thndr', 'Car', 'Maintenance', 'Services', 'Obligations',
+  'Credit Card Payments', 'Gifts', 'Family', 'Cafes', 'Outings',
+  'Clothes', 'Electronics', 'Travel', 'Transport', 'Work', 'Sports', 'Food', 'House'
+];
+const stored = localStorage.getItem('custom_categories');
+const categories = ref(stored ? JSON.parse(stored) : defaultCategories);
+const showNewCategoryInput = ref(false);
+const newCategoryName = ref('');
+const addNewCategory = () => {
+  const name = newCategoryName.value.trim();
+  if (name && !categories.value.includes(name)) {
+    categories.value.push(name);
+    localStorage.setItem('custom_categories', JSON.stringify(categories.value));
+  }
+  if (name) {
+    transaction.value.Category = name;
+    newCategoryName.value = '';
+    showNewCategoryInput.value = false;
+    toast.add({ severity: 'success', summary: 'Category added', detail: name, life: 2000 });
+  }
 };
 
-// UI refs
+// ── Expenses CRUD ──
 const dt = ref();
 const transactionDialog = ref(false);
 const deleteTransactionDialog = ref(false);
 const deleteTransactionsDialog = ref(false);
 const transaction = ref({});
 const selectedTransactions = ref();
-const detailsDialog = ref(false);
-const selectedTransactionDetails = ref(null);
-const filters = ref({
-    'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
-});
 const submitted = ref(false);
+const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } });
 
-const formatCurrency = (value) => {
-    if (value !== undefined && value !== null) {
-        return value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-    }
-    return '$0.00';
-};
+// ── Mobile search & list ──
+const mobileSearch = ref('');
+const filteredExpenses = computed(() => {
+  const q = mobileSearch.value.trim().toLowerCase();
+  if (!q) return transactionStore.transactions;
+  return transactionStore.transactions.filter(t =>
+    (t.Reason || '').toLowerCase().includes(q) ||
+    (t.Category || '').toLowerCase().includes(q) ||
+    String(t.Transcation).includes(q) ||
+    (t.date || '').toLowerCase().includes(q)
+  );
+});
 
-const logout = () => {
-    debugger
-    userStore.logout();
-    router.push('/login');
-};
-
-const openNew = () => {
-    transaction.value = {};
-    submitted.value = false;
-    transactionDialog.value = true;
-};
-
-const hideDialog = () => {
-    transactionDialog.value = false;
-    submitted.value = false;
-};
+const openNew = () => { transaction.value = {}; submitted.value = false; transactionDialog.value = true; };
+const hideDialog = () => { transactionDialog.value = false; submitted.value = false; };
 
 const saveTransaction = () => {
-    submitted.value = true;
-
-    if (transaction.value.Transcation !== undefined && transaction.value.Category && transaction.value.Reason?.trim()) {
-        if (transaction.value.id) {
-            transactionStore.UpdateTransaction(transaction.value);
-            toast.add({severity:'success', summary: 'Successful', detail: 'Transaction Updated', life: 3000});
-        } else {
-            transactionStore.AddTransaction(transaction.value);
-            toast.add({severity:'success', summary: 'Successful', detail: 'Transaction Created', life: 3000});
-        }
-
-        transactionDialog.value = false;
-        transaction.value = {};
+  submitted.value = true;
+  if (transaction.value.Transcation && transaction.value.Category && transaction.value.Reason?.trim()) {
+    if (transaction.value.id) {
+      transactionStore.UpdateTransaction(transaction.value);
+      toast.add({ severity: 'success', summary: 'Updated', detail: 'Transaction updated.', life: 3000 });
+    } else {
+      transactionStore.AddTransaction(transaction.value);
+      toast.add({ severity: 'success', summary: 'Added', detail: 'New expense added.', life: 3000 });
     }
-};
-
-const editTransaction = (txn) => {
-    transaction.value = {...txn};
-    transactionDialog.value = true;
-};
-
-const confirmDeleteTransaction = (txn) => {
-    transaction.value = txn;
-    deleteTransactionDialog.value = true;
-};
-
-const deleteTransaction = () => {
-    transactionStore.RemoveTransaction(transaction.value.id);
-    deleteTransactionDialog.value = false;
+    transactionDialog.value = false;
     transaction.value = {};
-    toast.add({severity:'success', summary: 'Successful', detail: 'Transaction Deleted', life: 3000});
+  }
 };
 
-const exportCSV = () => {
-    dt.value.exportCSV();
+const editTransaction = (txn) => { transaction.value = { ...txn }; transactionDialog.value = true; };
+const confirmDeleteTransaction = (txn) => { transaction.value = txn; deleteTransactionDialog.value = true; };
+const deleteTransaction = () => {
+  transactionStore.RemoveTransaction(transaction.value.id);
+  deleteTransactionDialog.value = false;
+  transaction.value = {};
+  toast.add({ severity: 'success', summary: 'Deleted', detail: 'Expense removed.', life: 2000 });
 };
-
-const confirmDeleteSelected = () => {
-    deleteTransactionsDialog.value = true;
-};
-
+const confirmDeleteSelected = () => { deleteTransactionsDialog.value = true; };
 const deleteSelectedTransactions = () => {
-    const ids = selectedTransactions.value.map(val => val.id);
-    transactionStore.RemoveTransactions(ids);
-    deleteTransactionsDialog.value = false;
-    selectedTransactions.value = null;
-    toast.add({severity:'success', summary: 'Successful', detail: 'Transactions Deleted', life: 3000});
+  transactionStore.RemoveTransactions(selectedTransactions.value.map(v => v.id));
+  deleteTransactionsDialog.value = false;
+  selectedTransactions.value = null;
+  toast.add({ severity: 'success', summary: 'Deleted', detail: 'Selected expenses removed.', life: 2000 });
 };
 
-const showDetails = () => {
-    if (selectedTransactions.value && selectedTransactions.value.length === 1) {
-        selectedTransactionDetails.value = selectedTransactions.value[0];
-        detailsDialog.value = true;
-    }
-};
+const exportCSV = () => dt.value.exportCSV();
 
 const handleImport = (event) => {
-    const file = event.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const content = e.target.result;
-        try {
-            if (file.name.endsWith('.json')) {
-                const data = JSON.parse(content);
-                if (Array.isArray(data)) {
-                    data.forEach(item => {
-                        transactionStore.AddTransaction(item);
-                    });
-                    toast.add({severity:'success', summary: 'Imported', detail: 'Transactions imported successfully', life: 3000});
-                }
-            } else {
-                const lines = content.split('\n');
-                if (lines.length < 2) return;
-                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-                    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                    const txn = {};
-                    headers.forEach((header, index) => {
-                        txn[header] = values[index];
-                    });
-                    const amount = Number(txn.Amount || txn.Transcation || 0);
-                    const date = txn.Date || txn.date || new Date().toLocaleDateString();
-                    const category = txn.Category || txn.category || '';
-                    const reason = txn.Reason || txn.description || '';
-                    
-                    transactionStore.AddTransaction({
-                        date,
-                        Transcation: amount,
-                        Category: category,
-                        Reason: reason
-                    });
-                }
-                toast.add({severity:'success', summary: 'Imported', detail: 'Transactions imported successfully', life: 3000});
-            }
-        } catch (err) {
-            toast.add({severity:'error', summary: 'Error', detail: 'Failed to parse file', life: 3000});
+  const file = event.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const content = e.target.result;
+      if (file.name.endsWith('.json')) {
+        const data = JSON.parse(content);
+        if (Array.isArray(data)) data.forEach(item => transactionStore.AddTransaction(item));
+      } else {
+        const lines = content.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          const vals = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+          const row = {};
+          headers.forEach((h, idx) => { row[h] = vals[idx]; });
+          transactionStore.AddTransaction({
+            date: row.Date || row.date || '',
+            Transcation: Number(row.Amount || row.Transcation || 0),
+            Category: row.Category || '',
+            Reason: row.Reason || ''
+          });
         }
-    };
-    reader.readAsText(file);
+      }
+      toast.add({ severity: 'success', summary: 'Imported', detail: 'Data imported successfully.', life: 3000 });
+    } catch {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to parse file.', life: 3000 });
+    }
+  };
+  reader.readAsText(file);
 };
 </script>
+
+<style scoped>
+/* ── Shell ── */
+.app-shell {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  color: #f1f5f9;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Header ── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.875rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header-brand { display: flex; align-items: center; gap: 0.625rem; }
+.brand-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: white;
+}
+.brand-name { font-size: 1.125rem; font-weight: 800; color: #f1f5f9; letter-spacing: -0.025em; }
+.logout-btn {
+  display: flex; align-items: center; gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #f87171;
+  font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.logout-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: #f87171; }
+.logout-label { display: none; }
+@media (min-width: 480px) { .logout-label { display: inline; } }
+
+/* ── Main ── */
+.app-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 0.875rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+@media (min-width: 640px) {
+  .app-main { padding: 1.75rem 1.25rem 3rem; gap: 1.75rem; }
+}
+
+/* ── Summary Cards ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+@media (min-width: 640px) { .cards-grid { gap: 1rem; } }
+
+.card {
+  border-radius: 16px;
+  padding: 0.875rem;
+  display: flex; flex-direction: column; gap: 0.25rem;
+  border: 1px solid;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent);
+  pointer-events: none;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+
+@media (min-width: 640px) { .card { padding: 1.25rem; border-radius: 20px; } }
+
+.card--indigo { background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.3); }
+.card--rose   { background: rgba(244, 63, 94, 0.10); border-color: rgba(244, 63, 94, 0.25); }
+.card--emerald{ background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.25); }
+.card--red    { background: rgba(239, 68, 68, 0.10); border-color: rgba(239, 68, 68, 0.25); }
+
+.card-label {
+  font-size: clamp(0.6rem, 2vw, 0.75rem);
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-value {
+  font-size: clamp(0.75rem, 3.5vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f1f5f9;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-actions { display: flex; gap: 0.25rem; margin-top: 0.125rem; }
+.card-hint {
+  font-size: clamp(0.55rem, 1.8vw, 0.68rem);
+  color: rgba(148, 163, 184, 0.7);
+  display: flex; align-items: center; gap: 0.25rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+.card-hint .pi { font-size: 0.6rem; }
+
+/* ── Icon Button ── */
+.icon-btn {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: rgba(203,213,225,0.8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; cursor: pointer; transition: all 0.2s;
+}
+.icon-btn:hover { background: rgba(99,102,241,0.25); border-color: #6366f1; color: #a5b4fc; }
+.icon-btn--secondary { width: 36px; height: 36px; font-size: 0.8rem; border-radius: 10px; }
+
+/* ── Income Panel ── */
+.income-panel {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  padding: 1.125rem;
+}
+@media (min-width: 640px) { .income-panel { padding: 1.5rem; } }
+
+.income-panel-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 1rem; }
+.income-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 1rem;
+}
+.income-title { font-size: 1rem; font-weight: 700; color: #d1fae5; margin: 0; }
+
+.income-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) { .income-form { grid-template-columns: 1fr 1fr 1fr auto; } }
+
+.income-field { display: flex; flex-direction: column; gap: 0.375rem; }
+.income-field--full { grid-column: 1 / -1; }
+@media (min-width: 640px) { .income-field--full { grid-column: auto; } }
+
+.field-label { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.add-income-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border-color: transparent !important;
+  font-weight: 700 !important;
+}
+
+/* ── Table Panel ── */
+.table-panel {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* ── Switcher ── */
+.switcher-bar {
+  display: flex;
+  border-bottom: 1px solid rgba(99,102,241,0.15);
+}
+.switcher-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 0.375rem;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.875rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.switcher-btn.active { color: #a5b4fc; background: rgba(99,102,241,0.1); }
+.switcher-btn.active { border-bottom: 2px solid #6366f1; }
+.switcher-badge {
+  background: rgba(99,102,241,0.15);
+  color: #a5b4fc;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+}
+.switcher-btn.active .switcher-badge { background: rgba(99,102,241,0.35); }
+
+/* ── Table Actions ── */
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  justify-content: space-between;
+  align-items: center;
+}
+.action-group { display: flex; gap: 0.375rem; flex-wrap: wrap; }
+
+/* ── Table Header ── */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+.table-title { font-size: 1rem; font-weight: 700; color: #e2e8f0; }
+.income-total-badge {
+  background: rgba(16,185,129,0.15);
+  color: #34d399;
+  font-size: 0.8rem; font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(16,185,129,0.3);
+}
+
+/* ── Amount styles ── */
+.amount-out { color: #f87171; font-weight: 700; }
+.amount-in  { color: #34d399; font-weight: 700; }
+
+/* ── Category Chip ── */
+.category-chip {
+  background: rgba(99,102,241,0.15);
+  color: #a5b4fc;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(99,102,241,0.25);
+  white-space: nowrap;
+}
+
+/* ── Row actions ── */
+.row-actions { display: flex; gap: 0.375rem; }
+.row-btn {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+}
+.row-btn:hover { background: rgba(99,102,241,0.2); border-color: #6366f1; color: #a5b4fc; }
+.row-btn--danger:hover { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #f87171; }
+
+/* ── Search field ── */
+.search-field { width: 100%; max-width: 220px; }
+
+/* ── Dialog ── */
+.dialog-body { display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0; }
+.field-group { display: flex; flex-direction: column; gap: 0.375rem; }
+.field-error { color: #f87171; font-size: 0.75rem; margin-top: 0.25rem; }
+.cat-row { display: flex; gap: 0.5rem; align-items: center; }
+.custom-cat-box {
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 12px;
+  padding: 0.875rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+
+/* ── Confirm dialog ── */
+.confirm-body { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0; }
+.confirm-icon { font-size: 2rem; color: #f59e0b; flex-shrink: 0; }
+
+/* ── Details dialog ── */
+.details-body { display: flex; flex-direction: column; gap: 0.875rem; padding: 0.5rem 0; }
+.detail-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(99,102,241,0.1); }
+.detail-row--col { flex-direction: column; align-items: flex-start; gap: 0.375rem; }
+.detail-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; }
+.detail-value { font-size: 0.9375rem; color: #e2e8f0; font-weight: 500; }
+
+/* ── PrimeVue overrides for dark theme ── */
+:deep(.p-datatable) { background: transparent !important; }
+:deep(.p-datatable-header) { background: transparent !important; border: none !important; padding: 0.5rem 0.875rem !important; }
+:deep(.p-datatable-thead > tr > th) {
+  background: rgba(99,102,241,0.08) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(99,102,241,0.1) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+:deep(.p-datatable-tbody > tr) { background: transparent !important; border-color: rgba(99,102,241,0.08) !important; transition: background 0.15s; }
+:deep(.p-datatable-tbody > tr:hover) { background: rgba(99,102,241,0.07) !important; }
+:deep(.p-datatable-tbody > tr > td) { border-color: rgba(99,102,241,0.08) !important; color: #cbd5e1 !important; font-size: 0.875rem !important; }
+:deep(.p-paginator) { background: transparent !important; border: none !important; padding: 0.625rem !important; color: #64748b !important; }
+:deep(.p-paginator-page.p-highlight) { background: #6366f1 !important; color: white !important; border-radius: 8px !important; }
+:deep(.p-checkbox .p-checkbox-box) { background: rgba(99,102,241,0.1) !important; border-color: rgba(99,102,241,0.4) !important; border-radius: 6px !important; }
+:deep(.p-checkbox .p-checkbox-box.p-highlight) { background: #6366f1 !important; border-color: #6366f1 !important; }
+:deep(.p-toolbar) { background: transparent !important; border: none !important; padding: 0 !important; }
+:deep(.p-inputtext), :deep(.p-inputnumber-input), :deep(.p-textarea) {
+  background: rgba(30,41,59,0.8) !important;
+  border-color: rgba(99,102,241,0.25) !important;
+  color: #f1f5f9 !important;
+  border-radius: 10px !important;
+}
+:deep(.p-inputtext:focus), :deep(.p-inputnumber-input:focus) {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.2) !important;
+}
+:deep(.p-select), :deep(.p-select-panel) {
+  background: #1e293b !important;
+  border-color: rgba(99,102,241,0.25) !important;
+  color: #f1f5f9 !important;
+  border-radius: 10px !important;
+}
+:deep(.p-select-option:hover) { background: rgba(99,102,241,0.15) !important; }
+:deep(.p-select-option.p-highlight) { background: rgba(99,102,241,0.25) !important; color: #a5b4fc !important; }
+:deep(.p-dialog .p-dialog-header) { background: #1e293b !important; color: #f1f5f9 !important; border-bottom: 1px solid rgba(99,102,241,0.15) !important; border-radius: 16px 16px 0 0 !important; }
+:deep(.p-dialog .p-dialog-content) { background: #1e293b !important; color: #f1f5f9 !important; }
+:deep(.p-dialog .p-dialog-footer) { background: #1e293b !important; border-top: 1px solid rgba(99,102,241,0.1) !important; border-radius: 0 0 16px 16px !important; }
+:deep(.p-dialog) { border-radius: 16px !important; box-shadow: 0 25px 80px rgba(0,0,0,0.6) !important; }
+
+/* ─── Mobile / Desktop visibility ─── */
+/* Desktop table: hidden on mobile, visible on md+ */
+.desktop-table { display: none; }
+/* Mobile list: visible on mobile, hidden on md+ */
+.mobile-list { display: flex; flex-direction: column; }
+
+@media (min-width: 768px) {
+  .desktop-table { display: block; }
+  .mobile-list { display: none; }
+}
+
+/* ─── Mobile search bar ─── */
+.mobile-search {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: rgba(30,41,59,0.8);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 12px;
+  padding: 0.625rem 0.875rem;
+  margin: 0.875rem 0.875rem 0.5rem;
+}
+.mobile-search .pi { color: #64748b; font-size: 0.875rem; flex-shrink: 0; }
+.mobile-search-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #f1f5f9; font-size: 0.875rem; font-family: inherit;
+}
+.mobile-search-input::placeholder { color: #475569; }
+
+/* ─── Mobile card ─── */
+.mobile-empty {
+  text-align: center; color: #475569; font-size: 0.875rem;
+  padding: 2rem 1rem;
+}
+.mobile-card {
+  background: rgba(30,41,59,0.7);
+  border: 1px solid rgba(99,102,241,0.12);
+  border-radius: 14px;
+  margin: 0 0.875rem 0.625rem;
+  padding: 0.875rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  transition: background 0.2s;
+}
+.mobile-card:active { background: rgba(99,102,241,0.08); }
+.mobile-card--income { border-color: rgba(16,185,129,0.2); }
+
+.mc-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+.mc-amount {
+  font-size: 1.125rem; font-weight: 800; letter-spacing: -0.02em;
+}
+.mc-reason {
+  font-size: 0.875rem; color: #cbd5e1; line-height: 1.4;
+  word-break: break-word;
+}
+.mc-source {
+  font-size: 0.8125rem; font-weight: 600; color: #34d399;
+}
+.mc-bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  padding-top: 0.375rem;
+  border-top: 1px solid rgba(99,102,241,0.1);
+}
+.mc-date {
+  font-size: 0.75rem; color: #64748b;
+  display: flex; align-items: center; gap: 0.25rem;
+}
+.mc-date .pi { font-size: 0.7rem; }
+</style>
