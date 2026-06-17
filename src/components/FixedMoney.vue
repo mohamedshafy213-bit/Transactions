@@ -29,51 +29,50 @@
       
       <!-- UX Actions: Search, Filter, Sort, Add -->
       <div class="table-actions">
-        <div class="action-group">
-          <Button :label="i18nStore.t('newCommitment')" icon="pi pi-plus" size="small" @click="openNew" />
+        <!-- Row 1: Add button -->
+        <div class="actions-top-row">
+          <Button :label="i18nStore.t('newCommitment')" icon="pi pi-plus" size="small" @click="openNew" class="new-btn" />
         </div>
-        
-        <div class="action-group search-filter-row">
-          <!-- Search Input -->
+
+        <!-- Row 2: Search + Filters (wraps on mobile) -->
+        <div class="actions-filter-row">
           <IconField class="search-field">
             <InputIcon><i class="pi pi-search" /></InputIcon>
             <InputText v-model="searchQuery" :placeholder="i18nStore.t('searchPlaceholder')" />
           </IconField>
-          
-          <!-- Status Filter -->
-          <select v-model="selectedStatusFilter" class="ux-select">
-            <option value="All">{{ i18nStore.t('filterAll') }}</option>
-            <option value="Active">{{ i18nStore.t('filterActive') }}</option>
-            <option value="Completed">{{ i18nStore.t('filterCompleted') }}</option>
-            <option value="DueSoon">{{ i18nStore.t('filterDueSoon') }}</option>
-            <option value="Overdue">{{ i18nStore.t('filterOverdue') }}</option>
-          </select>
-          
-          <!-- Sort Dropdown -->
-          <select v-model="selectedSort" class="ux-select">
-            <option value="dueDate">{{ i18nStore.t('sortBy') }}: {{ i18nStore.t('sortDueDate') }}</option>
-            <option value="progress">{{ i18nStore.t('sortBy') }}: {{ i18nStore.t('sortProgress') }}</option>
-            <option value="amount">{{ i18nStore.t('sortBy') }}: {{ i18nStore.t('sortAmount') }}</option>
-            <option value="name">{{ i18nStore.t('sortBy') }}: {{ i18nStore.t('sortName') }}</option>
-          </select>
+          <div class="selects-row">
+            <select v-model="selectedStatusFilter" class="ux-select">
+              <option value="All">{{ i18nStore.t('filterAll') }}</option>
+              <option value="Active">{{ i18nStore.t('filterActive') }}</option>
+              <option value="Completed">{{ i18nStore.t('filterCompleted') }}</option>
+              <option value="DueSoon">{{ i18nStore.t('filterDueSoon') }}</option>
+              <option value="Overdue">{{ i18nStore.t('filterOverdue') }}</option>
+            </select>
+            <select v-model="selectedSort" class="ux-select">
+              <option value="dueDate">{{ i18nStore.t('sortDueDate') }}</option>
+              <option value="progress">{{ i18nStore.t('sortProgress') }}</option>
+              <option value="amount">{{ i18nStore.t('sortAmount') }}</option>
+              <option value="name">{{ i18nStore.t('sortName') }}</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- Desktop Table View (Visible >= 768px) -->
-      <div class="desktop-table-wrapper desktop-only">
+      <div class="desktop-table-wrapper">
         <table class="custom-installment-table">
           <thead>
             <tr>
               <th>{{ i18nStore.t('colName') }}</th>
-              <th>{{ i18nStore.t('colTotalAmount') }}</th>
-              <th>{{ i18nStore.t('colMonthlyPayment') }}</th>
-              <th>{{ i18nStore.t('colPaidAmount') }}</th>
-              <th>{{ i18nStore.t('colRemainingBalance') }}</th>
-              <th>{{ i18nStore.t('colTotalMonths') }}</th>
-              <th>{{ i18nStore.t('colRemainingMonths') }}</th>
+              <th>Total</th>
+              <th>/mo</th>
+              <th>Paid</th>
+              <th>Left</th>
+              <th>Mo.</th>
+              <th>Rem.</th>
               <th>{{ i18nStore.t('colNextDueDate') }}</th>
               <th>{{ i18nStore.t('colStatus') }}</th>
-              <th>{{ i18nStore.t('colProgress') }}</th>
+              <th>%</th>
               <th>{{ i18nStore.t('colActions') }}</th>
             </tr>
           </thead>
@@ -118,36 +117,25 @@
               </td>
               <td>
                 <div class="action-buttons-cell">
-                  <!-- Quick actions -->
                   <button 
                     v-if="item.status === 'Active'" 
                     class="quick-action-btn btn-action-paid"
                     @click="markAsPaid(item)"
                     :title="i18nStore.t('btnPaid')"
-                  >
-                    💰
-                  </button>
+                  >💰</button>
                   <button 
                     v-if="item.status === 'Active'" 
                     class="quick-action-btn btn-action-skip"
                     @click="promptSkip(item)"
                     :title="i18nStore.t('btnSkip')"
-                  >
-                    ⏭️
-                  </button>
+                  >⏭️</button>
                   <button 
                     class="quick-action-btn btn-action-history"
                     @click="viewHistory(item)"
                     :title="i18nStore.t('btnHistory')"
-                  >
-                    📜
-                  </button>
-                  <button class="quick-action-btn" @click="editCommitment(item)" :title="i18nStore.t('btnEdit')">
-                    ✏️
-                  </button>
-                  <button class="quick-action-btn btn-delete" @click="confirmDeleteCommitment(item)" :title="i18nStore.t('btnDelete')">
-                    🗑️
-                  </button>
+                  >📜</button>
+                  <button class="quick-action-btn" @click="editCommitment(item)" :title="i18nStore.t('btnEdit')">✏️</button>
+                  <button class="quick-action-btn btn-delete" @click="confirmDeleteCommitment(item)" :title="i18nStore.t('btnDelete')">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -156,11 +144,14 @@
       </div>
 
       <!-- Mobile Cards List View (Visible < 768px) -->
-      <div class="mobile-list-view mobile-only">
+      <div class="mobile-list-view">
         <div v-if="filteredCommitments.length === 0" class="mobile-empty">
-          {{ i18nStore.t('noSpendingRecorded') }}
+          <i class="pi pi-calendar-plus" style="font-size:2rem; color:#475569; margin-bottom:8px;"></i>
+          <div>{{ i18nStore.t('noSpendingRecorded') }}</div>
         </div>
         <div v-for="item in filteredCommitments" :key="item.id" class="mobile-installment-card">
+
+          <!-- Card header: Name + Status badge -->
           <div class="mic-top-row">
             <div class="mic-title-block">
               <span class="mic-title">{{ item.name }}</span>
@@ -171,42 +162,27 @@
             </span>
           </div>
 
-          <div class="mic-details-grid">
-            <div class="mic-detail-item">
-              <span class="mcd-label">{{ i18nStore.t('colTotalAmount') }}</span>
-              <span class="mcd-value">{{ formatCurrency(item.totalAmount) }}</span>
+          <!-- Primary amounts: monthly / remaining -->
+          <div class="mic-amounts-row">
+            <div class="mic-amount-box">
+              <span class="mic-amount-label">/mo</span>
+              <span class="mic-amount-value" style="color:#818cf8;">{{ formatCurrency(item.installmentAmount || item.amount) }}</span>
             </div>
-            <div class="mic-detail-item">
-              <span class="mcd-label">{{ i18nStore.t('colMonthlyPayment') }}</span>
-              <span class="mcd-value font-bold" style="color: #818cf8;">{{ formatCurrency(item.installmentAmount || item.amount) }}</span>
+            <div class="mic-amount-divider"></div>
+            <div class="mic-amount-box">
+              <span class="mic-amount-label">Paid</span>
+              <span class="mic-amount-value" style="color:#34d399;">{{ formatCurrency(getStats(item).paidAmount) }}</span>
             </div>
-            <div class="mic-detail-item">
-              <span class="mcd-label">{{ i18nStore.t('colPaidAmount') }}</span>
-              <span class="mcd-value">{{ formatCurrency(getStats(item).paidAmount) }}</span>
-            </div>
-            <div class="mic-detail-item">
-              <span class="mcd-label">{{ i18nStore.t('colRemainingBalance') }}</span>
-              <span class="mcd-value" style="color: #fb7185;">{{ formatCurrency(getStats(item).remainingBalance) }}</span>
-            </div>
-            <div class="mic-detail-item">
-              <span class="mcd-label">{{ i18nStore.t('colTotalMonths') }}</span>
-              <span class="mcd-value">{{ item.totalMonths }} mo</span>
-            </div>
-            <div class="mic-detail-item">
-              <span class="mcd-label">{{ i18nStore.t('colRemainingMonths') }}</span>
-              <span class="mcd-value">{{ getStats(item).remainingMonths }} mo</span>
+            <div class="mic-amount-divider"></div>
+            <div class="mic-amount-box">
+              <span class="mic-amount-label">Left</span>
+              <span class="mic-amount-value" style="color:#fb7185;">{{ formatCurrency(getStats(item).remainingBalance) }}</span>
             </div>
           </div>
 
-          <div class="mic-due-row">
-            <span class="mic-due-label">{{ i18nStore.t('colNextDueDate') }}:</span>
-            <span class="mic-due-val" :class="getDateColorClass(item)">
-              {{ getStats(item).nextPaymentDate || '—' }}
-            </span>
-          </div>
-
+          <!-- Progress bar -->
           <div class="mic-progress-row">
-            <div class="progress-bar-bg">
+            <div class="progress-bar-bg" style="flex:1;">
               <div 
                 class="progress-bar-fill" 
                 :class="getProgressColor(item)"
@@ -216,34 +192,36 @@
             <span class="progress-pct">{{ getStats(item).progress.toFixed(0) }}%</span>
           </div>
 
-          <div class="mic-actions-footer">
-            <!-- Mobile touch actions -->
+          <!-- Due date + months remaining -->
+          <div class="mic-meta-row">
+            <div class="mic-meta-item">
+              <span class="mic-meta-label">📅 {{ i18nStore.t('colNextDueDate') }}</span>
+              <span class="mic-meta-val" :class="getDateColorClass(item)">{{ getStats(item).nextPaymentDate || '—' }}</span>
+            </div>
+            <div class="mic-meta-item">
+              <span class="mic-meta-label">🗓️ Remaining</span>
+              <span class="mic-meta-val">{{ getStats(item).remainingMonths }} / {{ item.totalMonths }} mo</span>
+            </div>
+          </div>
+
+          <!-- Action buttons (2-column grid) -->
+          <div class="mic-actions-grid">
             <button 
               v-if="item.status === 'Active'" 
-              class="mobile-action-btn btn-mob-paid"
+              class="mic-action-btn btn-mob-paid"
               @click="markAsPaid(item)"
-            >
-              💰 {{ i18nStore.t('btnPaid') }}
-            </button>
+            >💰 {{ i18nStore.t('btnPaid') }}</button>
             <button 
               v-if="item.status === 'Active'" 
-              class="mobile-action-btn btn-mob-skip"
+              class="mic-action-btn btn-mob-skip"
               @click="promptSkip(item)"
-            >
-              ⏭️ {{ i18nStore.t('btnSkip') }}
-            </button>
+            >⏭️ {{ i18nStore.t('btnSkip') }}</button>
             <button 
-              class="mobile-action-btn btn-mob-history"
+              class="mic-action-btn btn-mob-history"
               @click="viewHistory(item)"
-            >
-              📜 {{ i18nStore.t('btnHistory') }}
-            </button>
-            <button class="mobile-action-btn" @click="editCommitment(item)">
-              ✏️ {{ i18nStore.t('btnEdit') }}
-            </button>
-            <button class="mobile-action-btn btn-mob-delete" @click="confirmDeleteCommitment(item)">
-              🗑️ {{ i18nStore.t('btnDelete') }}
-            </button>
+            >📜 {{ i18nStore.t('btnHistory') }}</button>
+            <button class="mic-action-btn" @click="editCommitment(item)">✏️ {{ i18nStore.t('btnEdit') }}</button>
+            <button class="mic-action-btn btn-mob-delete" @click="confirmDeleteCommitment(item)">🗑️ {{ i18nStore.t('btnDelete') }}</button>
           </div>
         </div>
       </div>
@@ -817,56 +795,84 @@ const deleteCommitment = () => {
 .table-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
 }
-@media (min-width: 768px) {
-  .table-actions {
+
+.actions-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.new-btn { min-height: 44px; }
+
+.actions-filter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+@media (min-width: 640px) {
+  .actions-filter-row {
     flex-direction: row;
-    justify-content: space-between;
     align-items: center;
   }
 }
 
-.search-filter-row {
+.selects-row {
   display: flex;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  gap: 8px;
-  width: 100%;
-}
-@media (min-width: 768px) {
-  .search-filter-row {
-    width: auto;
-    justify-content: flex-end;
-  }
 }
 
 .ux-select {
-  height: 44px;
+  height: 42px;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(99, 102, 241, 0.25);
   color: #cbd5e1;
   border-radius: 10px;
-  padding: 0 12px;
+  padding: 0 10px;
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 600;
   outline: none;
   cursor: pointer;
+  flex: 1;
+  min-width: 120px;
 }
 
 .search-field {
   width: 100%;
 }
-@media (min-width: 576px) {
+@media (min-width: 640px) {
   .search-field {
-    width: 220px;
+    flex: 1;
+    min-width: 180px;
   }
 }
 
-/* Custom Styled Table */
+/* Desktop Table: hidden on mobile, visible on md+ */
 .desktop-table-wrapper {
+  display: none;
   overflow-x: auto;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+@media (min-width: 768px) {
+  .desktop-table-wrapper {
+    display: block;
+  }
+}
+
+/* Mobile list: visible on mobile, hidden on md+ */
+.mobile-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .mobile-list-view {
+    display: none;
+  }
 }
 
 .custom-installment-table {
@@ -1007,99 +1013,160 @@ const deleteCommitment = () => {
 
 /* ── Mobile installment card list ── */
 .mobile-installment-card {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
   box-sizing: border-box;
+  transition: background 0.2s;
+}
+.mobile-installment-card:active {
+  background: rgba(99, 102, 241, 0.06);
 }
 
 .mic-top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 8px;
 }
 .mic-title-block {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 .mic-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.mic-details-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  background: rgba(15, 23, 42, 0.25);
-  padding: 10px;
+
+/* Primary amounts strip */
+.mic-amounts-row {
+  display: flex;
+  align-items: stretch;
+  background: rgba(15, 23, 42, 0.3);
   border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
 }
-.mic-detail-item {
+.mic-amount-box {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
   gap: 2px;
 }
-.mcd-label {
-  font-size: 0.65rem;
+.mic-amount-label {
+  font-size: 0.6rem;
   font-weight: 700;
-  color: #64748b;
   text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
 }
-.mcd-value {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #e2e8f0;
+.mic-amount-value {
+  font-size: 0.875rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
-.mic-due-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8125rem;
-  color: #cbd5e1;
+.mic-amount-divider {
+  width: 1px;
+  background: rgba(255,255,255,0.06);
+  align-self: stretch;
 }
-.mic-due-label {
-  font-weight: 600;
-}
-.mic-due-val {
-  font-weight: 700;
-}
+
 .mic-progress-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.mic-actions-footer {
+/* Meta row: due date + months */
+.mic-meta-row {
   display: flex;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 6px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding-top: 10px;
-  justify-content: flex-end;
 }
-.mobile-action-btn {
-  padding: 6px 10px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+.mic-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 120px;
+  background: rgba(15, 23, 42, 0.2);
   border-radius: 8px;
-  font-size: 0.75rem;
+  padding: 6px 8px;
+}
+.mic-meta-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+.mic-meta-val {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+/* Action buttons: 2-up grid */
+.mic-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.mic-action-btn {
+  min-height: 40px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #cbd5e1;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: center;
 }
-.btn-mob-paid { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2); color: #34d399; }
-.btn-mob-skip { background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-.btn-mob-history { background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.2); color: #a78bfa; }
-.btn-mob-delete { background: rgba(244, 63, 94, 0.08); border-color: rgba(244, 63, 94, 0.2); color: #fb7185; }
+.mic-action-btn:active {
+  opacity: 0.7;
+}
+.btn-mob-paid { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #34d399; }
+.btn-mob-paid:hover { background: rgba(16, 185, 129, 0.18); }
+.btn-mob-skip { background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.25); color: #fbbf24; }
+.btn-mob-skip:hover { background: rgba(251, 191, 36, 0.18); }
+.btn-mob-history { background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.25); color: #a78bfa; }
+.btn-mob-history:hover { background: rgba(139, 92, 246, 0.18); }
+.btn-mob-delete { background: rgba(244, 63, 94, 0.08); border-color: rgba(244, 63, 94, 0.25); color: #fb7185; }
+.btn-mob-delete:hover { background: rgba(244, 63, 94, 0.18); }
+
+/* Mobile empty state */
+.mobile-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #475569;
+  font-size: 0.875rem;
+  text-align: center;
+  gap: 8px;
+}
 
 /* Dialog Body structure */
 .dialog-body {
@@ -1110,11 +1177,16 @@ const deleteCommitment = () => {
 }
 .fields-row-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
+@media (min-width: 420px) {
+  .fields-row-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 .dialog-date-input {
-  height: 38px;
+  height: 42px;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #cbd5e1;
@@ -1124,6 +1196,7 @@ const deleteCommitment = () => {
   outline: none;
   font-family: inherit;
   box-sizing: border-box;
+  width: 100%;
 }
 
 /* History Modal styles */
