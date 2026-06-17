@@ -32,7 +32,7 @@ export const translations = {
     // Navigation
     dashboard: "Dashboard",
     transactions: "Transactions",
-    fixedMoney: "Fixed Money",
+    fixedMoney: "My Bills",
     logout: "Logout",
     login: "Login",
     salaryTracker: "Salary Tracker",
@@ -229,7 +229,7 @@ export const translations = {
     // Navigation
     dashboard: "لوحة التحكم",
     transactions: "المعاملات",
-    fixedMoney: "الأقساط والالتزامات",
+    fixedMoney: "فواتيري",
     logout: "تسجيل الخروج",
     login: "تسجيل الدخول",
     salaryTracker: "متبع الراتب",

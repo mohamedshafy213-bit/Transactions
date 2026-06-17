@@ -121,7 +121,7 @@ onMounted(() => {
           :class="{ active: route.path === '/fixed-money' }" 
           @click="navigateTo('/fixed-money')"
         >
-          <i class="pi pi-calendar-plus"></i>
+          <i class="pi pi-credit-card"></i>
           <span>{{ i18nStore.t('fixedMoney') }}</span>
         </button>
       </nav>
@@ -250,7 +250,7 @@ onMounted(() => {
           :class="{ active: route.path === '/fixed-money' }" 
           @click="navigateTo('/fixed-money')"
         >
-          <i class="pi pi-calendar-plus"></i>
+          <i class="pi pi-credit-card"></i>
           <span>{{ i18nStore.t('fixedMoney') }}</span>
         </button>
       </nav>

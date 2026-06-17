@@ -8,6 +8,7 @@ html, body, #app {
   background: #0f172a;
   color: #f1f5f9;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Scrollbar */

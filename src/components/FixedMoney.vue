@@ -1,6 +1,15 @@
 <template>
   <div class="fixed-money-page">
     
+    <!-- ── Page Header ── -->
+    <div class="page-header">
+      <div class="page-header-icon"><i class="pi pi-credit-card"></i></div>
+      <div>
+        <h1 class="page-title">{{ i18nStore.t('fixedMoney') }}</h1>
+        <p class="page-subtitle">{{ i18nStore.t('monthlyInstallmentsDue') }}: <strong>{{ formatCurrency(totalMonthlyAmount) }}</strong></p>
+      </div>
+    </div>
+
     <!-- ── Top Metrics ── -->
     <div class="metrics-grid">
       <!-- Total Monthly Commitments -->
@@ -725,11 +734,44 @@ const deleteCommitment = () => {
 .fixed-money-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Page header */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.page-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(99,102,241,0.15);
+  border: 1px solid rgba(99,102,241,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #818cf8;
+  flex-shrink: 0;
+}
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0;
+  line-height: 1.2;
+}
+.page-subtitle {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 2px 0 0;
 }
 
 /* Metrics Cards */
@@ -790,6 +832,7 @@ const deleteCommitment = () => {
   border-radius: 20px;
   padding: 1rem;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .table-actions {
@@ -837,7 +880,8 @@ const deleteCommitment = () => {
   outline: none;
   cursor: pointer;
   flex: 1;
-  min-width: 120px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .search-field {
@@ -1088,6 +1132,7 @@ const deleteCommitment = () => {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
 }
 
 /* Meta row: due date + months */
