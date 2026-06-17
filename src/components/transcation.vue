@@ -50,29 +50,16 @@
         </div>
       </div>
 
-      <!-- ── Quick Add Income ── -->
-      <div class="income-panel">
-        <div class="income-panel-header">
-          <div class="income-icon"><i class="pi pi-plus-circle"></i></div>
-          <h2 class="income-title">Add New Income</h2>
-        </div>
-        <div class="income-form">
-          <div class="income-field">
-            <label class="field-label">Amount</label>
-            <InputNumber v-model="newIncome.amount" mode="currency" currency="USD" locale="en-US" placeholder="$0.00" fluid class="income-input" />
-          </div>
-          <div class="income-field">
-            <label class="field-label">Source</label>
-            <InputText v-model="newIncome.source" placeholder="e.g. Freelance, Bonus..." fluid class="income-input" />
-          </div>
-          <div class="income-field income-field--full">
-            <label class="field-label">Note (optional)</label>
-            <InputText v-model="newIncome.note" placeholder="Add a note..." fluid class="income-input" />
-          </div>
-          <div class="income-field income-field--full">
-            <Button label="Add Income" icon="pi pi-plus" class="add-income-btn" @click="addIncome" />
-          </div>
-        </div>
+      <!-- ── Add Income Button ── -->
+      <div class="income-btn-row">
+        <button class="income-trigger-btn" @click="openIncomeDialog">
+          <span class="itb-icon"><i class="pi pi-arrow-down-left"></i></span>
+          <span class="itb-text">
+            <span class="itb-label">Add New Income</span>
+            <span class="itb-sub">Freelance, bonus, extra earnings...</span>
+          </span>
+          <i class="pi pi-plus itb-plus"></i>
+        </button>
       </div>
 
       <!-- ── View Switcher + Table ── -->
@@ -292,6 +279,29 @@
       </template>
     </Dialog>
 
+    <!-- Add Income Dialog -->
+    <Dialog v-model:visible="incomeDialog" :style="{ width: '92vw', maxWidth: '440px' }" header="Add New Income" :modal="true" class="p-fluid">
+      <div class="dialog-body">
+        <div class="field-group">
+          <label class="field-label">Amount</label>
+          <InputNumber v-model="newIncome.amount" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="addIncome" />
+          <small v-if="incomeSubmitted && !newIncome.amount" class="field-error">Amount is required.</small>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Source</label>
+          <InputText v-model="newIncome.source" placeholder="e.g. Freelance, Bonus, Side job..." fluid />
+          <small v-if="incomeSubmitted && !newIncome.source?.trim()" class="field-error">Source is required.</small>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Note <span style="color:#64748b;font-weight:400">(optional)</span></label>
+          <InputText v-model="newIncome.note" placeholder="Any additional details..." fluid />
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" text @click="incomeDialog = false; incomeSubmitted = false" />
+        <Button label="Add Income" icon="pi pi-check" class="add-income-btn" @click="addIncome" />
+      </template>
+    </Dialog>
 
   </div>
 </template>
@@ -324,15 +334,24 @@ const formatCurrency = (v) =>
 const logout = () => { userStore.logout(); router.push('/login'); };
 
 // ── New Income ──
+const incomeDialog = ref(false);
+const incomeSubmitted = ref(false);
 const newIncome = ref({ amount: null, source: '', note: '' });
+
+const openIncomeDialog = () => {
+  newIncome.value = { amount: null, source: '', note: '' };
+  incomeSubmitted.value = false;
+  incomeDialog.value = true;
+};
+
 const addIncome = () => {
-  if (!newIncome.value.amount || !newIncome.value.source?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Missing fields', detail: 'Amount and source are required.', life: 3000 });
-    return;
-  }
+  incomeSubmitted.value = true;
+  if (!newIncome.value.amount || !newIncome.value.source?.trim()) return;
   transactionStore.AddIncome(newIncome.value);
   toast.add({ severity: 'success', summary: 'Income Added', detail: `+${formatCurrency(newIncome.value.amount)} from ${newIncome.value.source}`, life: 3000 });
   newIncome.value = { amount: null, source: '', note: '' };
+  incomeSubmitted.value = false;
+  incomeDialog.value = false;
 };
 
 const removeIncome = (id) => {
@@ -600,40 +619,43 @@ const handleImport = (event) => {
 .icon-btn:hover { background: rgba(99,102,241,0.25); border-color: #6366f1; color: #a5b4fc; }
 .icon-btn--secondary { width: 36px; height: 36px; font-size: 0.8rem; border-radius: 10px; }
 
-/* ── Income Panel ── */
-.income-panel {
-  background: rgba(16, 185, 129, 0.06);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  border-radius: 20px;
-  padding: 1.125rem;
-}
-@media (min-width: 640px) { .income-panel { padding: 1.5rem; } }
+/* ── Income Trigger Button ── */
+.income-btn-row { padding: 0; }
 
-.income-panel-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 1rem; }
-.income-icon {
-  width: 36px; height: 36px;
+.income-trigger-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 0.875rem;
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 16px;
+  padding: 0.875rem 1.125rem;
+  cursor: pointer; transition: all 0.2s; text-align: left;
+}
+.income-trigger-btn:hover {
+  background: rgba(16, 185, 129, 0.13);
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+}
+.itb-icon {
+  width: 40px; height: 40px; flex-shrink: 0;
   background: linear-gradient(135deg, #10b981, #059669);
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   color: white; font-size: 1rem;
 }
-.income-title { font-size: 1rem; font-weight: 700; color: #d1fae5; margin: 0; }
-
-.income-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+.itb-text { flex: 1; display: flex; flex-direction: column; gap: 0.125rem; }
+.itb-label { font-size: 0.9375rem; font-weight: 700; color: #d1fae5; }
+.itb-sub { font-size: 0.75rem; color: #6ee7b7; opacity: 0.8; }
+.itb-plus {
+  color: #10b981; font-size: 1rem; flex-shrink: 0;
+  background: rgba(16,185,129,0.15); border-radius: 8px;
+  padding: 0.375rem;
 }
-@media (min-width: 640px) { .income-form { grid-template-columns: 1fr 1fr 1fr auto; } }
-
-.income-field { display: flex; flex-direction: column; gap: 0.375rem; }
-.income-field--full { grid-column: 1 / -1; }
-@media (min-width: 640px) { .income-field--full { grid-column: auto; } }
 
 .field-label { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
 
 .add-income-btn {
-  width: 100%;
   background: linear-gradient(135deg, #10b981, #059669) !important;
   border-color: transparent !important;
   font-weight: 700 !important;
