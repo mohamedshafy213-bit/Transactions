@@ -1,271 +1,221 @@
 <template>
   <div class="dashboard-page">
-    <!-- ── Date Range Filter Bar ── -->
-    <div class="date-filter-bar">
-      <!-- Quick Filter Pills -->
-      <div class="quick-pills-container">
-        <button 
-          v-for="pill in quickFilterPills" 
-          :key="pill.value" 
-          class="pill-btn" 
-          :class="{ active: activeQuickFilter === pill.value }"
-          @click="applyQuickFilter(pill.value)"
-        >
-          {{ pill.label }}
-        </button>
+    
+    <!-- ── 1. PERSONALIZED GREETING & SALARY PILL ── -->
+    <header class="greeting-section">
+      <div v-if="userStore.loggedInUser === 'Sama'" class="greeting-block">
+        <h1 class="greeting-title">hello cutie sama 🩷</h1>
+        <p class="greeting-subtitle">here's how your money is doing lately 💸</p>
+      </div>
+      <div v-else-if="userStore.loggedInUser === 'admin'" class="greeting-block">
+        <h1 class="greeting-title">Hello, Admin 👋</h1>
+        <p class="greeting-subtitle">Here's your financial summary</p>
+      </div>
+      <div v-else class="greeting-block">
+        <h1 class="greeting-title">Welcome Back 👋</h1>
+        <p class="greeting-subtitle">Here is your financial overview</p>
       </div>
 
-      <!-- Custom Date Picker Inputs -->
-      <div class="custom-range-picker">
-        <div class="picker-group">
-          <label class="picker-label">From</label>
-          <input type="date" v-model="customFromDate" class="date-input" />
+      <!-- Salary Detection Chip -->
+      <div v-if="transactionStore.salary > 0" class="salary-chip">
+        <span>💼 Your salary this month: {{ formatCurrency(transactionStore.salary) }}</span>
+      </div>
+    </header>
+
+    <!-- ── 2A. DATE FILTER REDESIGN ── -->
+    <div class="date-filter-container">
+      
+      <!-- Mobile Only Native Select Selector -->
+      <div class="mobile-only filter-mobile-select-wrapper">
+        <div class="mobile-select-box">
+          <select 
+            v-model="activeQuickFilter" 
+            @change="applyQuickFilter(activeQuickFilter)" 
+            class="mobile-native-select"
+          >
+            <option value="today">Today</option>
+            <option value="last7">Last 7 Days</option>
+            <option value="last30">Last 30 Days</option>
+            <option value="thisMonth">This Month</option>
+            <option value="lastMonth">Last Month</option>
+            <option value="thisYear">This Year</option>
+            <option value="allTime">All Time</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          <div class="select-chevron">▼</div>
         </div>
-        <div class="picker-group">
-          <label class="picker-label">To</label>
-          <input type="date" v-model="customToDate" class="date-input" />
+
+        <!-- Mobile Custom Range Inputs (Shown when "Custom Range" is selected) -->
+        <div v-if="activeQuickFilter === 'custom'" class="mobile-custom-range-inputs">
+          <div class="custom-range-row">
+            <div class="input-group">
+              <label>FROM</label>
+              <input type="date" v-model="customFromDate" class="date-input" />
+            </div>
+            <div class="input-group">
+              <label>TO</label>
+              <input type="date" v-model="customToDate" class="date-input" />
+            </div>
+          </div>
+          <button class="apply-filter-btn full-width" @click="applyCustomRange">Apply</button>
         </div>
-        <div class="picker-actions">
+      </div>
+
+      <!-- Desktop Only Filter Pills & Custom Inputs -->
+      <div class="desktop-only filter-desktop-layout">
+        <div class="quick-pills-container">
+          <button 
+            v-for="pill in quickFilterPills" 
+            :key="pill.value" 
+            class="pill-btn" 
+            :class="{ active: activeQuickFilter === pill.value }"
+            @click="applyQuickFilter(pill.value)"
+          >
+            {{ pill.label }}
+          </button>
+          <button 
+            class="pill-btn" 
+            :class="{ active: activeQuickFilter === 'custom' }"
+            @click="activeQuickFilter = 'custom'"
+          >
+            Custom Range
+          </button>
+        </div>
+
+        <!-- Desktop Custom Range Inputs -->
+        <div v-if="activeQuickFilter === 'custom'" class="desktop-custom-range-picker">
+          <div class="picker-group">
+            <label class="picker-label">From</label>
+            <input type="date" v-model="customFromDate" class="date-input" />
+          </div>
+          <div class="picker-group">
+            <label class="picker-label">To</label>
+            <input type="date" v-model="customToDate" class="date-input" />
+          </div>
           <button class="apply-filter-btn" @click="applyCustomRange">Apply Range</button>
           <button class="reset-filter-btn" @click="resetFilters">Reset</button>
         </div>
       </div>
+
+      <!-- Showing Range Text -->
+      <div class="date-range-display-text">
+        <span>📅 Showing: {{ friendlyDateRangeText }}</span>
+      </div>
     </div>
 
-    <!-- Active Filter Status -->
-    <div class="date-range-display">
-      <i class="pi pi-calendar"></i>
-      <span>Showing data from <strong>{{ formattedDateRangeText }}</strong></span>
-    </div>
-
-    <!-- ── Summary Cards Grid ── -->
-    <div class="cards-grid">
-      <!-- Total Income -->
-      <div class="card card--indigo">
-        <div class="card-label">Total Income</div>
+    <!-- ── 2B. KPI CARDS IN A 2x2 GRID ON MOBILE ── -->
+    <div class="simplified-kpis-grid">
+      <!-- Card 1: Money In (soft green tint) -->
+      <div class="kpi-card-redesign tint-green">
+        <div class="card-header-row">
+          <span class="card-emoji">💰</span>
+          <span class="card-title">Money In</span>
+        </div>
         <div class="card-value">{{ formatCurrency(totalIncomeFiltered) }}</div>
-        <div class="card-hint">
-          <i class="pi pi-info-circle"></i> Salary ({{ monthsCount }} mo) + Extra Income
-        </div>
+        <div class="card-desc">what you received</div>
       </div>
 
-      <!-- Total Expenses -->
-      <div class="card card--rose">
-        <div class="card-label">Total Expenses</div>
+      <!-- Card 2: Money Out (soft red/pink tint) -->
+      <div class="kpi-card-redesign tint-red">
+        <div class="card-header-row">
+          <span class="card-emoji">💸</span>
+          <span class="card-title">Money Out</span>
+        </div>
         <div class="card-value">{{ formatCurrency(totalExpensesFiltered) }}</div>
-        <div class="card-hint">
-          <i class="pi pi-chart-bar"></i> All outgoing transactions
-        </div>
+        <div class="card-desc">what you spent</div>
       </div>
 
-      <!-- Net Balance -->
-      <div class="card" :class="netBalanceFiltered >= 0 ? 'card--emerald' : 'card--red'">
-        <div class="card-label">Net Balance</div>
+      <!-- Card 3: Left Over (soft blue tint) -->
+      <div class="kpi-card-redesign tint-blue">
+        <div class="card-header-row">
+          <span class="card-emoji">🏦</span>
+          <span class="card-title">Left Over</span>
+        </div>
         <div class="card-value">{{ formatCurrency(netBalanceFiltered) }}</div>
-        <div class="card-hint">
-          <i class="pi" :class="netBalanceFiltered >= 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
-          {{ netBalanceFiltered >= 0 ? 'Within budget' : 'Over budget' }}
-        </div>
+        <div class="card-desc">your balance this period</div>
       </div>
 
-      <!-- Disposable Income -->
-      <div class="card card--emerald">
-        <div class="card-label">Disposable Income</div>
-        <div class="card-value">{{ formatCurrency(disposableIncome) }}</div>
-        <div class="card-hint">
-          <i class="pi pi-money-bill"></i> Income minus Fixed obligations
+      <!-- Card 4: Saved (soft purple tint) -->
+      <div class="kpi-card-redesign tint-purple">
+        <div class="card-header-row">
+          <span class="card-emoji">📊</span>
+          <span class="card-title">Saved</span>
         </div>
-      </div>
-
-      <!-- Total Applied Commitments -->
-      <div class="card card--purple">
-        <div class="card-label font-bold">Applied Commitments</div>
-        <div class="card-value">{{ formatCurrency(totalAppliedCommitmentsAmount) }}</div>
-        <div class="card-hint">
-          <i class="pi pi-check-square"></i> Logged commitments in range
-        </div>
-      </div>
-
-      <!-- Savings Rate -->
-      <div class="card card--indigo">
-        <div class="card-label">Savings Rate</div>
-        <div class="card-value" :class="savingsRate >= 15 ? 'text-emerald' : (savingsRate >= 0 ? 'text-amber' : 'text-rose')">
-          {{ savingsRate.toFixed(1) }}%
-        </div>
-        <div class="card-hint">
-          <i class="pi pi-percentage"></i> Net savings / Income ratio
-        </div>
-      </div>
-
-      <!-- Transaction Count -->
-      <div class="card card--slate">
-        <div class="card-label">Transactions Count</div>
-        <div class="card-value">{{ transactionCountFiltered }}</div>
-        <div class="card-hint">
-          <i class="pi pi-database"></i> {{ filteredTransactions.length }} exp / {{ filteredIncomes.length }} inc
-        </div>
+        <div class="card-value">{{ Math.max(0, savingsRate).toFixed(0) }}%</div>
+        <div class="card-desc">of your income was saved</div>
       </div>
     </div>
 
-    <!-- ── KPI Secondary Grid ── -->
-    <div class="kpis-grid">
-      <div class="kpi-card">
-        <span class="kpi-label">💰 Largest Expense</span>
-        <span class="kpi-value">{{ formatCurrency(largestSingleExpense) }}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">📈 Peak Income Month</span>
-        <span class="kpi-value kpi-value--small">{{ peakIncomeMonth }}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">📉 Peak Expense Month</span>
-        <span class="kpi-value kpi-value--small">{{ peakExpenseMonth }}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">🧾 Avg Monthly Exp</span>
-        <span class="kpi-value">{{ formatCurrency(avgMonthlyExpense) }}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">💵 Avg Monthly Inc</span>
-        <span class="kpi-value">{{ formatCurrency(avgMonthlyIncome) }}</span>
-      </div>
+    <!-- Health Banner below cards (full width) -->
+    <div class="health-banner-full" :class="healthBannerClass">
+      <span class="banner-icon">{{ healthBannerEmoji }}</span>
+      <span class="banner-text">{{ healthBannerText }}</span>
     </div>
 
-    <!-- ── Dashboard Charts Grid ── -->
-    <div class="dashboard-grid">
-      <!-- 1. Income vs Expense Comparison -->
-      <div class="chart-card chart-card--large">
+    <!-- ── 2C. CHARTS SECTION ── -->
+    <div class="dashboard-charts-layout">
+      <!-- Chart 1: Donut -->
+      <div class="chart-card-redesign">
         <div class="chart-card-header">
-          <span class="chart-card-title">Income vs Expenses Comparison</span>
-          <span class="chart-card-sub">Grouped bar comparison per month in range</span>
+          <h3 class="chart-title">Where did your money go? 💸</h3>
+          <p class="chart-subtitle">Your spending split by category</p>
         </div>
-        <div class="chart-wrapper">
-          <Bar :data="barChartData" :options="barOptions" />
-        </div>
-      </div>
-
-      <!-- 2. Monthly Net Savings Line Chart -->
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <span class="chart-card-title">Monthly Net Savings</span>
-          <span class="chart-card-sub">Income minus Expenses with zero baseline</span>
-        </div>
-        <div class="chart-wrapper">
-          <Line :data="netSavingsChartData" :options="savingsLineOptions" />
-        </div>
-      </div>
-
-      <!-- 3. Expense Trend Line Chart -->
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <span class="chart-card-title">Expense Trend</span>
-          <span class="chart-card-sub">Monthly expense totals over time</span>
-        </div>
-        <div class="chart-wrapper">
-          <Line :data="expenseTrendChartData" :options="trendLineOptions" />
-        </div>
-      </div>
-
-      <!-- 4. Top 5 Expense Categories Bar Chart -->
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <span class="chart-card-title">Top 5 Expense Categories</span>
-          <span class="chart-card-sub">Ranked by total spend</span>
-        </div>
-        <div class="chart-wrapper">
-          <Bar v-if="hasFilteredExpenses" :data="topCategoriesChartData" :options="horizontalBarOptions" />
-          <div v-else class="chart-empty">
-            <i class="pi pi-chart-bar"></i>
-            <span>No expense data available</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5. Income Sources Donut Chart -->
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <span class="chart-card-title">Income Sources Breakdown</span>
-          <span class="chart-card-sub">Distribution of funds by source</span>
-        </div>
-        <div class="chart-wrapper">
-          <Doughnut v-if="hasFilteredIncomes" :data="incomeSourcesChartData" :options="pieOptions" />
-          <div v-else class="chart-empty">
+        <div class="chart-container-inner">
+          <Doughnut v-if="hasFilteredExpenses" :data="expenseCategoryChartData" :options="pieOptions" />
+          <div v-else class="chart-empty-state">
             <i class="pi pi-chart-pie"></i>
-            <span>No income data available</span>
+            <span>No spending recorded yet 🎉</span>
           </div>
         </div>
       </div>
 
-      <!-- 6. Commitments Type Breakdown Chart -->
-      <div class="chart-card">
+      <!-- Chart 2: Grouped Bar -->
+      <div class="chart-card-redesign">
         <div class="chart-card-header">
-          <span class="chart-card-title">Commitments Breakdown</span>
-          <span class="chart-card-sub">Distribution of applied obligations by type</span>
+          <h3 class="chart-title">Income vs Spending 📊</h3>
+          <p class="chart-subtitle">Month by month comparison</p>
         </div>
-        <div class="chart-wrapper">
-          <Doughnut v-if="hasAppliedCommitments" :data="commitmentsBreakdownChartData" :options="pieOptions" />
-          <div v-else class="chart-empty">
-            <i class="pi pi-calendar-times"></i>
-            <span>No applied commitments in range</span>
+        <div class="chart-container-inner">
+          <Bar v-if="hasLast6MonthsData" :data="last6MonthsChartData" :options="barOptionsRedesign" />
+          <div v-else class="chart-empty-state">
+            <i class="pi pi-chart-bar"></i>
+            <span>Nothing to show yet — add income or expenses!</span>
           </div>
-        </div>
-      </div>
-
-      <!-- 7. Fixed Commitments Overview Widget -->
-      <div class="chart-card chart-card--large">
-        <div class="chart-card-header">
-          <span class="chart-card-title">Applied Fixed Commitments Details</span>
-          <span class="chart-card-sub">List of commitments applied during the selected date range</span>
-        </div>
-        
-        <!-- Desktop Table view -->
-        <DataTable 
-          v-if="hasAppliedCommitments"
-          :value="appliedCommitmentsInRange"
-          class="modern-table desktop-table-only"
-          :paginator="true"
-          :rows="5"
-          paginatorTemplate="PrevPageLink PageLinks NextPageLink"
-        >
-          <Column field="name" header="Name" sortable></Column>
-          <Column field="amount" header="Amount" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.amount) }}
-            </template>
-          </Column>
-          <Column field="type" header="Type" sortable>
-            <template #body="{ data }">
-              <span class="type-badge" :class="'badge--' + data.type.toLowerCase()">{{ data.type }}</span>
-            </template>
-          </Column>
-          <Column field="recurrence" header="Recurrence" sortable></Column>
-          <Column field="month" header="Month Applied" sortable>
-            <template #body="{ data }">
-              <span class="month-chip">{{ data.month }}</span>
-            </template>
-          </Column>
-        </DataTable>
-
-        <!-- Mobile card list view -->
-        <div v-if="hasAppliedCommitments" class="mobile-table-list">
-          <div v-for="item in appliedCommitmentsInRange" :key="item.id" class="mobile-widget-card">
-            <div class="mwc-top">
-              <span class="mwc-name">{{ item.name }}</span>
-              <span class="mwc-amount">{{ formatCurrency(item.amount) }}</span>
-            </div>
-            <div class="mwc-bottom">
-              <span class="type-badge" :class="'badge--' + item.type.toLowerCase()">{{ item.type }}</span>
-              <span class="month-chip">{{ item.month }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="chart-empty" style="height: 150px;">
-          <i class="pi pi-calendar-times"></i>
-          <span>No commitments applied in this date range.</span>
         </div>
       </div>
     </div>
+
+    <!-- ── 2D. FIXED COMMITMENTS SECTION ── -->
+    <div class="commitments-bottom-card">
+      <div class="commitments-header">
+        <h3 class="commitments-title">Your Monthly Commitments 📋</h3>
+        <p class="commitments-subtitle">These are your regular bills and installments</p>
+      </div>
+
+      <div v-if="transactionStore.fixedCommitments.length > 0" class="commitments-content">
+        <ul class="commitments-list">
+          <li v-for="item in transactionStore.fixedCommitments" :key="item.id" class="commitment-row-item">
+            <span class="commitment-item-name">
+              {{ getCommitmentEmoji(item) }} {{ item.name }}
+            </span>
+            <span class="commitment-item-amount">${{ item.amount.toLocaleString() }}/mo</span>
+          </li>
+        </ul>
+        <div class="commitments-divider-line"></div>
+        <div class="commitments-total-row">
+          <span>Total this month:</span>
+          <strong>${{ totalCommitmentsAmount.toLocaleString() }}</strong>
+        </div>
+      </div>
+      <div v-else class="commitments-empty-msg">
+        No commitments added yet. Add them in Fixed Money!
+      </div>
+
+      <div class="commitments-action-link">
+        <router-link to="/fixed-money" class="commitments-link">Manage commitments →</router-link>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -273,7 +223,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useTransactionStore } from '../stores/Transaction';
-import { Bar, Line, Doughnut } from 'vue-chartjs';
+import { useUserStore } from '../stores/user';
+import { Bar, Doughnut } from 'vue-chartjs';
 import {
   Chart as ChartJS,
   Title,
@@ -282,9 +233,7 @@ import {
   BarElement,
   CategoryScale,
   LinearScale,
-  ArcElement,
-  PointElement,
-  LineElement
+  ArcElement
 } from 'chart.js';
 
 ChartJS.register(
@@ -294,12 +243,11 @@ ChartJS.register(
   BarElement,
   CategoryScale,
   LinearScale,
-  ArcElement,
-  PointElement,
-  LineElement
+  ArcElement
 );
 
 const transactionStore = useTransactionStore();
+const userStore = useUserStore();
 const toast = useToast();
 
 const formatCurrency = (v) =>
@@ -307,13 +255,18 @@ const formatCurrency = (v) =>
     ? Number(v).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
     : '$0.00';
 
+const formatAbbreviated = (value) => {
+  if (value >= 1000) {
+    return '$' + (value / 1000).toFixed(0) + 'k';
+  }
+  return '$' + value;
+};
+
 // ── Date Filters & Persistence ──
 const quickFilterPills = [
   { label: 'Today', value: 'today' },
-  { label: 'Yesterday', value: 'yesterday' },
   { label: 'Last 7 Days', value: 'last7' },
   { label: 'Last 30 Days', value: 'last30' },
-  { label: 'Last 90 Days', value: 'last90' },
   { label: 'This Month', value: 'thisMonth' },
   { label: 'Last Month', value: 'lastMonth' },
   { label: 'This Year', value: 'thisYear' },
@@ -339,12 +292,6 @@ const calculatePillDates = (value) => {
     case 'today':
       from = new Date(now);
       break;
-    case 'yesterday':
-      from = new Date(now);
-      from.setDate(from.getDate() - 1);
-      to = new Date(from);
-      to.setHours(23, 59, 59, 999);
-      break;
     case 'last7':
       from = new Date(now);
       from.setDate(from.getDate() - 6);
@@ -352,10 +299,6 @@ const calculatePillDates = (value) => {
     case 'last30':
       from = new Date(now);
       from.setDate(from.getDate() - 29);
-      break;
-    case 'last90':
-      from = new Date(now);
-      from.setDate(from.getDate() - 89);
       break;
     case 'thisMonth':
       from = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -388,12 +331,14 @@ const saveFilterState = () => {
 
 const applyQuickFilter = (value) => {
   activeQuickFilter.value = value;
-  customFromDate.value = '';
-  customToDate.value = '';
-  const bounds = calculatePillDates(value);
-  filterFromDate.value = bounds.from;
-  filterToDate.value = bounds.to;
-  saveFilterState();
+  if (value !== 'custom') {
+    customFromDate.value = '';
+    customToDate.value = '';
+    const bounds = calculatePillDates(value);
+    filterFromDate.value = bounds.from;
+    filterToDate.value = bounds.to;
+    saveFilterState();
+  }
 };
 
 const applyCustomRange = () => {
@@ -455,12 +400,6 @@ onMounted(() => {
   loadFilterState();
 });
 
-const formattedDateRangeText = computed(() => {
-  if (!filterFromDate.value || !filterToDate.value) return '';
-  const options = { day: '2-digit', month: 'short', year: 'numeric' };
-  return `${filterFromDate.value.toLocaleDateString('en-US', options)} to ${filterToDate.value.toLocaleDateString('en-US', options)}`;
-});
-
 // ── Date Parser Helper ──
 const parseDate = (dateStr) => {
   if (!dateStr) return null;
@@ -507,7 +446,6 @@ const filteredIncomes = computed(() => {
   });
 });
 
-// Count unique months within the filter range
 const monthsCount = computed(() => {
   if (!filterFromDate.value || !filterToDate.value) return 1;
   const start = filterFromDate.value;
@@ -518,22 +456,6 @@ const monthsCount = computed(() => {
   const eMonth = end.getMonth();
   const diff = (eYear - sYear) * 12 + (eMonth - sMonth) + 1;
   return diff <= 0 ? 1 : diff;
-});
-
-const monthsInRange = computed(() => {
-  if (!filterFromDate.value || !filterToDate.value) return [];
-  const list = [];
-  let current = new Date(filterFromDate.value.getFullYear(), filterFromDate.value.getMonth(), 1);
-  const last = new Date(filterToDate.value.getFullYear(), filterToDate.value.getMonth(), 1);
-  while (current <= last) {
-    list.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`);
-    current.setMonth(current.getMonth() + 1);
-  }
-  return list;
-});
-
-const activeMonths = computed(() => {
-  return monthsInRange.value;
 });
 
 // ── Filtered Summary Metrics ──
@@ -551,148 +473,213 @@ const netBalanceFiltered = computed(() => {
   return totalIncomeFiltered.value - totalExpensesFiltered.value;
 });
 
-const transactionCountFiltered = computed(() => {
-  return filteredTransactions.value.length + filteredIncomes.value.length;
-});
-
-// ── Advanced KPIs ──
-const disposableIncome = computed(() => {
-  // Total Income minus expenses labeled as Type 'Fixed' (or commitment logs)
-  const fixedExpenses = filteredTransactions.value
-    .filter(t => t.Type === 'Fixed' || t.commitmentId)
-    .reduce((acc, t) => acc + Number(t.Transcation || 0), 0);
-  return totalIncomeFiltered.value - fixedExpenses;
-});
-
-const appliedCommitmentsInRange = computed(() => {
-  const rangeMonths = monthsInRange.value;
-  const list = [];
-  transactionStore.fixedCommitments.forEach(c => {
-    const intersection = (c.appliedMonths || []).filter(m => rangeMonths.includes(m));
-    intersection.forEach(m => {
-      list.push({
-        id: `${c.id}-${m}`,
-        commitmentId: c.id,
-        name: c.name,
-        amount: c.amount,
-        type: c.type,
-        recurrence: c.recurrence,
-        month: m
-      });
-    });
-  });
-  return list;
-});
-
-const totalAppliedCommitmentsAmount = computed(() => {
-  return appliedCommitmentsInRange.value.reduce((acc, c) => acc + Number(c.amount || 0), 0);
-});
-
-const largestSingleExpense = computed(() => {
-  if (filteredTransactions.value.length === 0) return 0;
-  return Math.max(...filteredTransactions.value.map(t => Number(t.Transcation || 0)));
-});
-
-const monthlyBreakdownFiltered = computed(() => {
-  const monthsMap = {};
-  activeMonths.value.forEach(k => {
-    monthsMap[k] = { income: Number(transactionStore.salary || 0), expense: 0 };
-  });
-
-  filteredTransactions.value.forEach(t => {
-    const parsed = parseDate(t.date);
-    if (parsed) {
-      const key = `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}`;
-      if (monthsMap[key]) {
-        monthsMap[key].expense += Number(t.Transcation || 0);
-      }
-    }
-  });
-
-  filteredIncomes.value.forEach(i => {
-    const parsed = parseDate(i.date);
-    if (parsed) {
-      const key = `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}`;
-      if (monthsMap[key]) {
-        monthsMap[key].income += Number(i.amount || 0);
-      }
-    }
-  });
-
-  return monthsMap;
-});
-
-const peakIncomeMonth = computed(() => {
-  let maxVal = -1;
-  let maxLabel = '—';
-  Object.entries(monthlyBreakdownFiltered.value).forEach(([k, v]) => {
-    if (v.income > maxVal) {
-      maxVal = v.income;
-      const [year, month] = k.split('-');
-      const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
-      maxLabel = `${d.toLocaleDateString('en-US', { month: 'short' })} ${year.slice(2)} (${formatCurrency(v.income)})`;
-    }
-  });
-  return maxLabel;
-});
-
-const peakExpenseMonth = computed(() => {
-  let maxVal = -1;
-  let maxLabel = '—';
-  Object.entries(monthlyBreakdownFiltered.value).forEach(([k, v]) => {
-    if (v.expense > maxVal) {
-      maxVal = v.expense;
-      const [year, month] = k.split('-');
-      const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
-      maxLabel = `${d.toLocaleDateString('en-US', { month: 'short' })} ${year.slice(2)} (${formatCurrency(v.expense)})`;
-    }
-  });
-  return maxLabel;
-});
-
-const avgMonthlyExpense = computed(() => {
-  if (monthsCount.value <= 0) return 0;
-  return totalExpensesFiltered.value / monthsCount.value;
-});
-
-const avgMonthlyIncome = computed(() => {
-  if (monthsCount.value <= 0) return 0;
-  return totalIncomeFiltered.value / monthsCount.value;
-});
-
 const savingsRate = computed(() => {
   if (totalIncomeFiltered.value <= 0) return 0;
   return (netBalanceFiltered.value / totalIncomeFiltered.value) * 100;
 });
 
-// ── Chart Configs ──
+// ── Chart Configurations ──
 const hasFilteredExpenses = computed(() => filteredTransactions.value.length > 0);
-const hasFilteredIncomes = computed(() => filteredIncomes.value.length > 0 || transactionStore.salary > 0);
-const hasAppliedCommitments = computed(() => appliedCommitmentsInRange.value.length > 0);
 
-const activeLabels = computed(() => {
-  return activeMonths.value.map(k => {
-    const [year, month] = k.split('-');
-    const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
-    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-  });
+const getCommitmentEmoji = (item) => {
+  const name = (item.name || '').toLowerCase();
+  const type = (item.type || '').toLowerCase();
+  if (name.includes('internet') || name.includes('wifi') || name.includes('phone') || name.includes('bill') || type.includes('bill')) return '📶';
+  if (name.includes('car') || name.includes('installment') || type.includes('installment')) return '🚗';
+  if (name.includes('rent') || type.includes('rent') || name.includes('home') || name.includes('house')) return '🏠';
+  return '📋';
+};
+
+const totalCommitmentsAmount = computed(() => {
+  return transactionStore.fixedCommitments
+    .filter(c => c.isActive)
+    .reduce((sum, c) => sum + Number(c.amount || 0), 0);
 });
 
-const barChartData = computed(() => {
+// Friendly date range text for subtext display
+const friendlyDateRangeText = computed(() => {
+  if (!filterFromDate.value || !filterToDate.value) return '';
+  const start = filterFromDate.value;
+  const end = filterToDate.value;
+  
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const shortMonthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  const startYear = start.getFullYear();
+  const startMonth = start.getMonth();
+  const startDay = start.getDate();
+  
+  const endYear = end.getFullYear();
+  const endMonth = end.getMonth();
+  const endDay = end.getDate();
+  
+  if (startYear === endYear && startMonth === endMonth && startDay === endDay) {
+    return `${monthNames[startMonth]} ${startDay}, ${startYear}`;
+  }
+  
+  const lastOfEndMonth = new Date(endYear, endMonth + 1, 0).getDate();
+  if (startYear === endYear && startMonth === endMonth && startDay === 1 && endDay === lastOfEndMonth) {
+    return `${monthNames[startMonth]} ${startYear}`;
+  }
+  
+  if (startMonth === 0 && startDay === 1 && endMonth === 11 && endDay === 31 && startYear === endYear) {
+    return `${startYear}`;
+  }
+  
+  const formatD = (d) => `${shortMonthNames[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  return `${formatD(start)} - ${formatD(end)}`;
+});
+
+// Health Banner Properties
+const healthBannerEmoji = computed(() => {
+  if (totalIncomeFiltered.value <= 0) return '👋';
+  const rate = savingsRate.value;
+  if (rate >= 20) return '🎉';
+  if (rate >= 5) return '💡';
+  return '⚠️';
+});
+
+const healthBannerText = computed(() => {
+  if (totalIncomeFiltered.value <= 0) return 'Add your income to start tracking!';
+  const rate = savingsRate.value;
+  if (rate >= 20) return "Great job! You're saving well this month!";
+  if (rate >= 5) return "Not bad! Try to cut a little spending.";
+  return "Heads up! You spent most of your income.";
+});
+
+const healthBannerClass = computed(() => {
+  if (totalIncomeFiltered.value <= 0) return 'banner-no-income';
+  const rate = savingsRate.value;
+  if (rate >= 20) return 'banner-great';
+  if (rate >= 5) return 'banner-good';
+  return 'banner-warning';
+});
+
+// Category Donut Chart Data (Max 6 categories)
+const expenseCategoryChartData = computed(() => {
+  const catMap = {};
+  filteredTransactions.value.forEach(t => {
+    const cat = t.Category || 'Uncategorized';
+    catMap[cat] = (catMap[cat] || 0) + Number(t.Transcation || 0);
+  });
+
+  const sorted = Object.entries(catMap)
+    .sort((a, b) => b[1] - a[1]);
+
+  let finalLabels = [];
+  let finalData = [];
+  
+  if (sorted.length <= 6) {
+    finalLabels = sorted.map(i => i[0]);
+    finalData = sorted.map(i => i[1]);
+  } else {
+    const top5 = sorted.slice(0, 5);
+    const rest = sorted.slice(5);
+    const otherSum = rest.reduce((sum, item) => sum + item[1], 0);
+    finalLabels = [...top5.map(i => i[0]), 'Other'];
+    finalData = [...top5.map(i => i[1]), otherSum];
+  }
+
+  const totalExp = finalData.reduce((sum, val) => sum + val, 0);
+
+  const labelWithPercentage = finalLabels.map((lbl, idx) => {
+    const amt = finalData[idx];
+    const pct = totalExp > 0 ? ((amt / totalExp) * 100).toFixed(0) : 0;
+    return `${lbl} (${formatCurrency(amt)} - ${pct}%)`;
+  });
+
   return {
-    labels: activeLabels.value,
+    labels: labelWithPercentage,
+    datasets: [{
+      data: finalData,
+      backgroundColor: [
+        '#f43f5e', // rose
+        '#6366f1', // indigo
+        '#10b981', // emerald
+        '#fbbf24', // amber
+        '#8b5cf6', // purple
+        '#94a3b8'  // slate
+      ],
+      borderWidth: 1,
+      borderColor: '#1e293b'
+    }]
+  };
+});
+
+// Last 6 Months Grouped Bar Chart Data
+const last6Months = computed(() => {
+  const list = [];
+  const now = new Date();
+  // We want reverse chronological order (Jun, May...)
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    list.push(d);
+  }
+  return list;
+});
+
+const last6MonthsGroupedData = computed(() => {
+  const months = last6Months.value;
+  const labels = months.map(d => d.toLocaleDateString('en-US', { month: 'short' }));
+  
+  const incomesData = [];
+  const expensesData = [];
+  
+  months.forEach(d => {
+    const year = d.getFullYear();
+    const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+    
+    const salaryVal = Number(transactionStore.salary || 0);
+    
+    const extraIncomeVal = transactionStore.incomes
+      .filter(i => {
+        const parsed = parseDate(i.date);
+        return parsed && parsed.getFullYear() === year && String(parsed.getMonth() + 1).padStart(2, '0') === monthStr;
+      })
+      .reduce((sum, i) => sum + Number(i.amount || 0), 0);
+      
+    incomesData.push(salaryVal + extraIncomeVal);
+    
+    const expensesVal = transactionStore.transactions
+      .filter(t => {
+        const parsed = parseDate(t.date);
+        return parsed && parsed.getFullYear() === year && String(parsed.getMonth() + 1).padStart(2, '0') === monthStr;
+      })
+      .reduce((sum, t) => sum + Number(t.Transcation || 0), 0);
+      
+    expensesData.push(expensesVal);
+  });
+  
+  return {
+    labels,
+    incomesData,
+    expensesData
+  };
+});
+
+const hasLast6MonthsData = computed(() => {
+  const data = last6MonthsGroupedData.value;
+  const totalIn = data.incomesData.reduce((sum, v) => sum + v, 0);
+  const totalOut = data.expensesData.reduce((sum, v) => sum + v, 0);
+  return totalIn > 0 || totalOut > 0;
+});
+
+const last6MonthsChartData = computed(() => {
+  const data = last6MonthsGroupedData.value;
+  return {
+    labels: data.labels,
     datasets: [
       {
         label: 'Income',
-        data: activeMonths.value.map(k => monthlyBreakdownFiltered.value[k]?.income || 0),
+        data: data.incomesData,
         backgroundColor: 'rgba(16, 185, 129, 0.75)',
         borderColor: '#10b981',
         borderWidth: 1,
         borderRadius: 5
       },
       {
-        label: 'Expenses',
-        data: activeMonths.value.map(k => monthlyBreakdownFiltered.value[k]?.expense || 0),
+        label: 'Spending',
+        data: data.expensesData,
         backgroundColor: 'rgba(244, 63, 94, 0.75)',
         borderColor: '#f43f5e',
         borderWidth: 1,
@@ -702,110 +689,7 @@ const barChartData = computed(() => {
   };
 });
 
-const netSavingsChartData = computed(() => {
-  return {
-    labels: activeLabels.value,
-    datasets: [{
-      label: 'Net Savings',
-      data: activeMonths.value.map(k => {
-        const item = monthlyBreakdownFiltered.value[k];
-        return item ? item.income - item.expense : 0;
-      }),
-      backgroundColor: 'rgba(99, 102, 241, 0.15)',
-      borderColor: '#6366f1',
-      borderWidth: 2,
-      fill: true,
-      tension: 0.35,
-      pointBackgroundColor: '#8b5cf6',
-      pointBorderColor: '#fff'
-    }]
-  };
-});
-
-const expenseTrendChartData = computed(() => {
-  return {
-    labels: activeLabels.value,
-    datasets: [{
-      label: 'Total Expenses',
-      data: activeMonths.value.map(k => monthlyBreakdownFiltered.value[k]?.expense || 0),
-      backgroundColor: 'rgba(244, 63, 94, 0.08)',
-      borderColor: '#f43f5e',
-      borderWidth: 2,
-      fill: true,
-      tension: 0.35,
-      pointBackgroundColor: '#f43f5e',
-      pointBorderColor: '#fff'
-    }]
-  };
-});
-
-const topCategoriesChartData = computed(() => {
-  const catMap = {};
-  filteredTransactions.value.forEach(t => {
-    const cat = t.Category || 'Uncategorized';
-    catMap[cat] = (catMap[cat] || 0) + Number(t.Transcation || 0);
-  });
-
-  const sorted = Object.entries(catMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  return {
-    labels: sorted.map(i => i[0]),
-    datasets: [{
-      label: 'Spend Amount',
-      data: sorted.map(i => i[1]),
-      backgroundColor: 'rgba(139, 92, 246, 0.75)',
-      borderColor: '#8b5cf6',
-      borderWidth: 1,
-      borderRadius: 5
-    }]
-  };
-});
-
-const incomeSourcesChartData = computed(() => {
-  const srcMap = {};
-  const baseSalaryTotal = Number(transactionStore.salary || 0) * monthsCount.value;
-  if (baseSalaryTotal > 0) {
-    srcMap['Base Salary'] = baseSalaryTotal;
-  }
-  filteredIncomes.value.forEach(i => {
-    const src = i.source || 'Other Income';
-    srcMap[src] = (srcMap[src] || 0) + Number(i.amount || 0);
-  });
-
-  return {
-    labels: Object.keys(srcMap),
-    datasets: [{
-      data: Object.values(srcMap),
-      backgroundColor: [
-        '#10b981', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a7f3d0'
-      ],
-      borderWidth: 1,
-      borderColor: '#1e293b'
-    }]
-  };
-});
-
-const commitmentsBreakdownChartData = computed(() => {
-  const group = {};
-  appliedCommitmentsInRange.value.forEach(item => {
-    group[item.type] = (group[item.type] || 0) + Number(item.amount || 0);
-  });
-  return {
-    labels: Object.keys(group),
-    datasets: [{
-      data: Object.values(group),
-      backgroundColor: [
-        '#6366f1', '#fbbf24', '#f87171', '#a78bfa', '#4ade80', '#fb7185', '#94a3b8'
-      ],
-      borderWidth: 1,
-      borderColor: '#1e293b'
-    }]
-  };
-});
-
-// ── Standard Chart Options ──
+// Chart Options
 const pieOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -814,7 +698,7 @@ const pieOptions = {
       position: 'bottom',
       labels: {
         color: '#cbd5e1',
-        font: { family: 'Inter, system-ui, sans-serif', size: 10 },
+        font: { family: 'Inter, system-ui, sans-serif', size: 11 },
         padding: 12
       }
     },
@@ -822,7 +706,7 @@ const pieOptions = {
       backgroundColor: '#1e293b',
       titleColor: '#f1f5f9',
       bodyColor: '#cbd5e1',
-      borderColor: 'rgba(99, 102, 241, 0.3)',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
       borderWidth: 1,
       padding: 10,
       bodyFont: { family: 'Inter, system-ui, sans-serif' }
@@ -830,7 +714,7 @@ const pieOptions = {
   }
 };
 
-const barOptions = {
+const barOptionsRedesign = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -842,113 +726,22 @@ const barOptions = {
       backgroundColor: '#1e293b',
       titleColor: '#f1f5f9',
       bodyColor: '#cbd5e1',
-      borderColor: 'rgba(99, 102, 241, 0.3)',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
       borderWidth: 1,
       padding: 10
     }
   },
   scales: {
     x: {
-      grid: { color: 'rgba(99, 102, 241, 0.06)', borderColor: 'rgba(99, 102, 241, 0.15)' },
+      grid: { color: 'rgba(255, 255, 255, 0.03)', borderColor: 'rgba(255, 255, 255, 0.08)' },
       ticks: { color: '#94a3b8', font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
     },
     y: {
-      grid: { color: 'rgba(99, 102, 241, 0.06)', borderColor: 'rgba(99, 102, 241, 0.15)' },
+      grid: { color: 'rgba(255, 255, 255, 0.03)', borderColor: 'rgba(255, 255, 255, 0.08)' },
       ticks: {
         color: '#94a3b8',
         font: { family: 'Inter, system-ui, sans-serif', size: 10 },
-        callback: (value) => '$' + value.toLocaleString()
-      }
-    }
-  }
-};
-
-const horizontalBarOptions = {
-  indexAxis: 'y',
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: '#1e293b',
-      titleColor: '#f1f5f9',
-      bodyColor: '#cbd5e1',
-      borderColor: 'rgba(99, 102, 241, 0.3)',
-      borderWidth: 1,
-      padding: 10
-    }
-  },
-  scales: {
-    x: {
-      grid: { color: 'rgba(99, 102, 241, 0.06)', borderColor: 'rgba(99, 102, 241, 0.15)' },
-      ticks: {
-        color: '#94a3b8',
-        font: { family: 'Inter, system-ui, sans-serif', size: 10 },
-        callback: (value) => '$' + value.toLocaleString()
-      }
-    },
-    y: {
-      grid: { display: false },
-      ticks: { color: '#cbd5e1', font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
-    }
-  }
-};
-
-const savingsLineOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: '#1e293b',
-      titleColor: '#f1f5f9',
-      bodyColor: '#cbd5e1',
-      borderColor: 'rgba(99, 102, 241, 0.3)',
-      borderWidth: 1,
-      padding: 10
-    }
-  },
-  scales: {
-    x: {
-      grid: { color: 'rgba(99, 102, 241, 0.06)', borderColor: 'rgba(99, 102, 241, 0.15)' },
-      ticks: { color: '#94a3b8', font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
-    },
-    y: {
-      grid: { color: 'rgba(99, 102, 241, 0.06)', borderColor: 'rgba(99, 102, 241, 0.15)' },
-      ticks: {
-        color: '#94a3b8',
-        font: { family: 'Inter, system-ui, sans-serif', size: 10 },
-        callback: (value) => '$' + value.toLocaleString()
-      }
-    }
-  }
-};
-
-const trendLineOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: '#1e293b',
-      titleColor: '#f1f5f9',
-      bodyColor: '#cbd5e1',
-      borderColor: 'rgba(99, 102, 241, 0.3)',
-      borderWidth: 1,
-      padding: 10
-    }
-  },
-  scales: {
-    x: {
-      grid: { color: 'rgba(99, 102, 241, 0.06)', borderColor: 'rgba(99, 102, 241, 0.15)' },
-      ticks: { color: '#94a3b8', font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
-    },
-    y: {
-      grid: { color: 'rgba(99, 102, 241, 0.06)', borderColor: 'rgba(99, 102, 241, 0.15)' },
-      ticks: {
-        color: '#94a3b8',
-        font: { family: 'Inter, system-ui, sans-serif', size: 10 },
-        callback: (value) => '$' + value.toLocaleString()
+        callback: (value) => formatAbbreviated(value)
       }
     }
   }
@@ -959,419 +752,495 @@ const trendLineOptions = {
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 16px;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
-/* ── Date Filter Bar ── */
-.date-filter-bar {
+/* ── Greeting section ── */
+.greeting-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  background: rgba(30, 41, 59, 0.45);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 20px;
-  padding: 1.25rem;
+  gap: 8px;
+}
+.greeting-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f1f5f9;
+}
+.greeting-subtitle {
+  font-size: 0.95rem;
+  color: #94a3b8;
 }
 
+/* Salary detection chip */
+.salary-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+/* ── Date filter container ── */
+.date-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* Mobile selector box */
+.filter-mobile-select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mobile-select-box {
+  position: relative;
+  width: 100%;
+}
+.mobile-native-select {
+  width: 100%;
+  height: 44px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #f1f5f9;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  appearance: none;
+  outline: none;
+}
+.select-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+.mobile-custom-range-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.custom-range-row {
+  display: flex;
+  gap: 8px;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.input-group label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+.date-input {
+  height: 44px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #f1f5f9;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 0.875rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.date-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+.apply-filter-btn {
+  height: 44px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  color: white;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.apply-filter-btn.full-width {
+  width: 100%;
+}
+.apply-filter-btn:hover {
+  transform: translateY(-1px);
+}
+.reset-filter-btn {
+  height: 44px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 16px;
+  transition: all 0.2s;
+}
+.reset-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.date-range-display-text {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  font-weight: 500;
+  padding-left: 2px;
+}
+
+/* Desktop filter layout */
+.filter-desktop-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .quick-pills-container {
   display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(99,102,241,0.2) transparent;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.quick-pills-container::-webkit-scrollbar {
-  height: 4px;
-}
-.quick-pills-container::-webkit-scrollbar-thumb {
-  background: rgba(99,102,241,0.2);
-  border-radius: 2px;
-}
-
 .pill-btn {
-  padding: 0.4rem 0.875rem;
+  padding: 6px 14px;
   background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
   color: #cbd5e1;
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 0.2s ease;
 }
-
 .pill-btn:hover {
   background: rgba(99, 102, 241, 0.1);
   border-color: rgba(99, 102, 241, 0.4);
-  color: #f1f5f9;
 }
-
 .pill-btn.active {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   border-color: transparent;
   color: white;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
-
-.custom-range-picker {
+.desktop-custom-range-picker {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.875rem;
+  gap: 12px;
   align-items: flex-end;
 }
-
 .picker-group {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  flex: 1;
-  min-width: 140px;
+  gap: 4px;
 }
-
 .picker-label {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
 }
 
-.date-input {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  color: #f1f5f9;
-  border-radius: 10px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  outline: none;
-  font-family: inherit;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.date-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-.picker-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.apply-filter-btn {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border: none;
-  color: white;
-  padding: 0.5rem 1.25rem;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  height: 38px;
-  white-space: nowrap;
-}
-.apply-filter-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.reset-filter-btn {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-  padding: 0.5rem 1.25rem;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  height: 38px;
-}
-.reset-filter-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-}
-
-.date-range-display {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #94a3b8;
-  padding-left: 0.25rem;
-}
-.date-range-display strong {
-  color: #f1f5f9;
-}
-
-/* ── Summary Cards Grid ── */
-.cards-grid {
+/* ── Simplified KPI Cards (2x2 on Mobile, 4 columns on desktop) ── */
+.simplified-kpis-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 12px;
 }
-@media (min-width: 768px) {
-  .cards-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-  }
-}
-@media (min-width: 1024px) {
-  .cards-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-  }
-}
-
-.card {
+.kpi-card-redesign {
+  background: rgba(30, 41, 59, 0.4);
   border-radius: 16px;
-  padding: 0.875rem;
-  display: flex; flex-direction: column; gap: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: default;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
-.card::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent);
-  pointer-events: none;
-}
-.card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
-
-@media (min-width: 640px) { .card { padding: 1.25rem; border-radius: 20px; } }
-
-.card--indigo { background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.3); }
-.card--rose   { background: rgba(244, 63, 94, 0.10); border-color: rgba(244, 63, 94, 0.25); }
-.card--emerald{ background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.25); }
-.card--red    { background: rgba(239, 68, 68, 0.10); border-color: rgba(239, 68, 68, 0.25); }
-.card--purple { background: rgba(139, 92, 246, 0.10); border-color: rgba(139, 92, 246, 0.25); }
-.card--slate  { background: rgba(148, 163, 184, 0.08); border-color: rgba(148, 163, 184, 0.2); }
-
-.card-label {
-  font-size: clamp(0.6rem, 2vw, 0.75rem);
-  font-weight: 700;
-  color: rgba(148, 163, 184, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.card-value {
-  font-size: clamp(0.75rem, 3.5vw, 1.75rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #f1f5f9;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.card-hint {
-  font-size: clamp(0.55rem, 1.8vw, 0.68rem);
-  color: rgba(148, 163, 184, 0.7);
-  display: flex; align-items: center; gap: 0.25rem;
-  margin-top: auto;
-  padding-top: 0.5rem;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.card-hint .pi { font-size: 0.68rem; }
-
-.text-emerald { color: #34d399 !important; }
-.text-amber { color: #fbbf24 !important; }
-.text-rose { color: #f87171 !important; }
-
-/* ── KPI Secondary Grid ── */
-.kpis-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-@media (min-width: 576px) {
-  .kpis-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-  }
-}
-@media (min-width: 992px) {
-  .kpis-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1rem;
-  }
-}
-.kpi-card {
-  background: rgba(30, 41, 59, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 0.875rem;
+.card-header-row {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 6px;
 }
-.kpi-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
+.card-emoji {
+  font-size: 1.15rem;
 }
-.kpi-value {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #e2e8f0;
-}
-.kpi-value--small {
+.card-title {
   font-size: 0.75rem;
   font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+.card-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Color Tints */
+.tint-green {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+.tint-red {
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+.tint-blue {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+.tint-purple {
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* ── Health Banner ── */
+.health-banner-full {
+  width: 100%;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+.banner-icon {
+  font-size: 1rem;
+}
+.banner-great {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+.banner-good {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+}
+.banner-warning {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+.banner-no-income {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
   color: #cbd5e1;
-  word-break: break-all;
-  line-height: 1.3;
 }
 
-/* ── Charts Grid ── */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+/* ── Charts section ── */
+.dashboard-charts-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-@media (min-width: 992px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .chart-card--large {
-    grid-column: span 2;
-  }
-}
-
-.chart-card {
+.chart-card-redesign {
   background: rgba(30, 41, 59, 0.45);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 20px;
-  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 12px;
+  box-sizing: border-box;
 }
-.chart-card-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-.chart-card-title {
-  font-size: 1.02rem;
+.chart-title {
+  font-size: 1.05rem;
   font-weight: 700;
   color: #f1f5f9;
 }
-.chart-card-sub {
-  font-size: 0.72rem;
+.chart-subtitle {
+  font-size: 0.75rem;
   color: #64748b;
+  margin-top: 2px;
 }
-.chart-wrapper {
+.chart-container-inner {
   position: relative;
-  height: 260px;
+  height: 240px;
   width: 100%;
+  overflow: hidden;
 }
-.chart-empty {
+.chart-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 8px;
   height: 100%;
+  color: #64748b;
+  font-size: 0.8125rem;
+  text-align: center;
+}
+.chart-empty-state .pi {
+  font-size: 2rem;
   color: #475569;
-  font-size: 0.875rem;
-}
-.chart-empty .pi {
-  font-size: 2.25rem;
 }
 
-/* ── Widget Commitments Table & list ── */
-.desktop-table-only {
-  display: none;
-}
-.mobile-table-list {
+/* ── Commitments Section ── */
+.commitments-bottom-card {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 12px;
+  box-sizing: border-box;
 }
-@media (min-width: 768px) {
-  .desktop-table-only {
-    display: block;
-  }
-  .mobile-table-list {
-    display: none;
-  }
-}
-
-.mobile-widget-card {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-.mwc-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.mwc-name {
-  font-size: 0.875rem;
+.commitments-title {
+  font-size: 1.05rem;
   font-weight: 700;
   color: #f1f5f9;
 }
-.mwc-amount {
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: #6366f1;
+.commitments-subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
 }
-.mwc-bottom {
+.commitments-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.commitments-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.commitment-row-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 0.875rem;
+  color: #cbd5e1;
 }
-
-.month-chip {
-  font-size: 0.6875rem;
+.commitment-item-name {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.commitment-item-amount {
   font-weight: 700;
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  color: #94a3b8;
+}
+.commitments-divider-line {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.commitments-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #cbd5e1;
+}
+.commitments-total-row strong {
+  font-size: 1rem;
+  color: #f1f5f9;
+}
+.commitments-empty-msg {
+  font-size: 0.8125rem;
+  color: #64748b;
+  text-align: center;
+  padding: 12px 0;
+}
+.commitments-action-link {
+  margin-top: 4px;
+}
+.commitments-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6366f1;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  display: inline-block;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.commitments-link:hover {
+  opacity: 0.8;
 }
 
-/* Custom Select styling inside charts dashboard widgets */
-:deep(.p-datatable) {
-  background: transparent !important;
+/* Responsive Hide/Show classes */
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
 }
-:deep(.p-datatable-thead > tr > th) {
-  background: rgba(15, 23, 42, 0.4) !important;
-  color: #94a3b8 !important;
-  border-color: rgba(99, 102, 241, 0.15) !important;
-  font-size: 0.8125rem !important;
-  font-weight: 700 !important;
-}
-:deep(.p-datatable-tbody > tr) {
-  background: transparent !important;
-  color: #cbd5e1 !important;
-  transition: background 0.2s;
-}
-:deep(.p-datatable-tbody > tr:hover) {
-  background: rgba(99, 102, 241, 0.04) !important;
-}
-:deep(.p-datatable-tbody > tr > td) {
-  border-color: rgba(255, 255, 255, 0.03) !important;
-  padding: 0.75rem 1rem !important;
-  font-size: 0.875rem !important;
-}
-:deep(.p-paginator) {
-  background: transparent !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
-  padding: 0.5rem !important;
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+  
+  .simplified-kpis-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .dashboard-charts-layout {
+    flex-direction: row;
+  }
+  .dashboard-charts-layout > * {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .date-filter-container {
+    padding: 16px;
+  }
+  .quick-pills-container {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .desktop-custom-range-picker {
+    flex-direction: row;
+  }
+  
+  .greeting-title {
+    font-size: 1.85rem;
+  }
+  .greeting-subtitle {
+    font-size: 1rem;
+  }
 }
 </style>

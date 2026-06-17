@@ -35,7 +35,7 @@ const logout = () => {
 </script>
 
 <template>
-  <div class="app-container">
+  <div class="app-container" :class="{ 'theme-sama': userStore.loggedInUser === 'Sama' }">
     <Toast />
     
     <!-- Desktop Sidebar (visible >= 1024px) -->
@@ -87,7 +87,9 @@ const logout = () => {
       </button>
       <div class="navbar-brand">
         <div class="brand-icon"><i class="pi pi-wallet"></i></div>
-        <span class="brand-name">Salary Tracker</span>
+        <span class="brand-name" v-if="userStore.loggedInUser === 'Sama'">hi sama 🩷</span>
+        <span class="brand-name" v-else-if="userStore.loggedInUser === 'admin'">Hi Admin 👋</span>
+        <span class="brand-name" v-else>Salary Tracker</span>
       </div>
       <div style="width: 44px;"></div>
     </header>

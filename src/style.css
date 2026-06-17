@@ -262,3 +262,64 @@ html, body, #app {
 .badge--investment, .badge--insurance { background: rgba(34, 197, 94, 0.15) !important; color: #4ade80 !important; border: 1px solid rgba(34, 197, 94, 0.3) !important; }
 .badge--loan { background: rgba(244, 63, 94, 0.15) !important; color: #fb7185 !important; border: 1px solid rgba(244, 63, 94, 0.3) !important; }
 .badge--variable, .badge--other { background: rgba(148, 163, 184, 0.15) !important; color: #94a3b8 !important; border: 1px solid rgba(148, 163, 184, 0.3) !important; }
+
+/* ── Sama Theme Accent Colors (Pink/Rose) ── */
+.theme-sama ::-webkit-scrollbar-thumb {
+  background: rgba(244, 63, 94, 0.35); /* rose-500 */
+}
+.theme-sama ::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 63, 94, 0.6);
+}
+
+.theme-sama .desktop-sidebar {
+  border-right: 1px solid rgba(244, 63, 94, 0.2);
+}
+.theme-sama .mobile-navbar {
+  border-bottom: 1px solid rgba(244, 63, 94, 0.2);
+}
+.theme-sama .mobile-drawer {
+  border-right: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.theme-sama .brand-icon {
+  background: linear-gradient(135deg, #f43f5e, #ec4899) !important; /* rose-500 to pink-500 */
+}
+
+.theme-sama .nav-item:hover {
+  background: rgba(244, 63, 94, 0.08) !important;
+  color: #f1f5f9 !important;
+}
+.theme-sama .nav-item.active {
+  background: rgba(244, 63, 94, 0.15) !important;
+  box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.3) !important;
+  color: #f1f5f9 !important;
+}
+
+/* Dashboard accent adjustments for theme-sama */
+.theme-sama .pill-btn.active {
+  background: linear-gradient(135deg, #f43f5e, #ec4899) !important;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3) !important;
+}
+.theme-sama .date-input:focus {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2) !important;
+}
+.theme-sama .apply-filter-btn {
+  background: linear-gradient(135deg, #f43f5e, #ec4899) !important;
+}
+.theme-sama .apply-filter-btn:hover {
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3) !important;
+}
+.theme-sama .mwc-amount {
+  color: #f43f5e !important;
+}
+.theme-sama .month-chip {
+  background: rgba(244, 63, 94, 0.15) !important;
+  color: #f43f5e !important;
+}
+.theme-sama .commitments-link {
+  color: #f43f5e !important;
+}
+.theme-sama .salary-chip {
+  border: 1px solid rgba(244, 63, 94, 0.2) !important;
+}
