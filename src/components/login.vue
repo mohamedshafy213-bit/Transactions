@@ -70,8 +70,8 @@ const password = ref('');
 function handleLogin() {
     userStore.login(username.value, password.value);
     if (userStore.isLoggedIn) {
-        // Redirect to transcation page
-        router.push('/transcation');
+        // Redirect to dashboard page
+        router.push('/dashboard');
     } else {
         // Show error message
         alert('Invalid username or password');

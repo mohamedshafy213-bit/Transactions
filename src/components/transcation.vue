@@ -1,66 +1,6 @@
 <template>
-  <div class="app-shell">
-    <Toast />
-
-    <!-- ── App Header ── -->
-    <header class="app-header">
-      <div class="header-inner">
-        <div class="header-brand">
-          <div class="brand-icon"><i class="pi pi-wallet"></i></div>
-          <span class="brand-name">Salary Tracker</span>
-        </div>
-        <button class="logout-btn" @click="logout">
-          <i class="pi pi-sign-out"></i>
-          <span class="logout-label">Logout</span>
-        </button>
-      </div>
-    </header>
-
-    <main class="app-main">
-
-      <!-- ── Summary Cards ── -->
-      <div class="cards-grid">
-        <!-- Total Balance -->
-        <div class="card card--indigo">
-          <div class="card-label">Total Balance</div>
-          <div class="card-value">{{ formatCurrency(transactionStore.totalIncome) }}</div>
-          <div class="card-actions">
-            <button class="icon-btn" @click="startEditSalary" title="Edit Salary">
-              <i class="pi pi-pencil"></i>
-            </button>
-          </div>
-          <div class="card-hint"><i class="pi pi-info-circle"></i> Salary + Extra Income</div>
-        </div>
-
-        <!-- Total Expenses -->
-        <div class="card card--rose">
-          <div class="card-label">Total Expenses</div>
-          <div class="card-value">{{ formatCurrency(transactionStore.totalExpenses) }}</div>
-          <div class="card-hint"><i class="pi pi-chart-bar"></i> All outgoing</div>
-        </div>
-
-        <!-- Remaining -->
-        <div class="card" :class="transactionStore.remind >= 0 ? 'card--emerald' : 'card--red'">
-          <div class="card-label">Remaining</div>
-          <div class="card-value">{{ formatCurrency(transactionStore.remind) }}</div>
-          <div class="card-hint">
-            <i class="pi" :class="transactionStore.remind >= 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
-            {{ transactionStore.remind >= 0 ? 'Within budget' : 'Over budget' }}
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Add Income Button ── -->
-      <div class="income-btn-row">
-        <button class="income-trigger-btn" @click="openIncomeDialog">
-          <span class="itb-icon"><i class="pi pi-arrow-down-left"></i></span>
-          <span class="itb-text">
-            <span class="itb-label">Add New Income</span>
-            <span class="itb-sub">Freelance, bonus, extra earnings...</span>
-          </span>
-          <i class="pi pi-plus itb-plus"></i>
-        </button>
-      </div>
+  <div class="transaction-page">
+    <main class="app-main" style="padding: 0; max-width: 100%;">
 
       <!-- ── View Switcher + Table ── -->
       <div class="table-panel">
@@ -82,35 +22,41 @@
           <div class="table-actions">
             <div class="action-group">
               <Button label="New" icon="pi pi-plus" size="small" @click="openNew" />
-              <Button label="Delete" icon="pi pi-trash" severity="danger" variant="outlined" size="small"
-                      @click="confirmDeleteSelected" :disabled="!selectedTransactions || !selectedTransactions.length" />
             </div>
             <div class="action-group">
-              <FileUpload mode="basic" accept=".csv,.json" :maxFileSize="1000000" customUpload chooseLabel="Import"
-                          auto @uploader="handleImport" :chooseButtonProps="{ severity: 'secondary', size: 'small', icon: 'pi pi-download' }" />
               <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV" />
             </div>
           </div>
 
           <!-- Desktop table -->
-          <DataTable ref="dt" v-model:selection="selectedTransactions" :value="transactionStore.transactions"
+          <DataTable ref="dt" :value="expensesList"
                      dataKey="id" :paginator="true" :rows="8" :filters="filters"
                      paginatorTemplate="PrevPageLink PageLinks NextPageLink"
                      class="modern-table desktop-table">
             <template #header>
-              <div class="table-header">
-                <span class="table-title">Expenses</span>
+              <div class="table-header" style="flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap: wrap;">
+                  <span class="table-title">Expenses</span>
+                  <span class="expense-total-badge">Total: {{ formatCurrency(transactionStore.totalExpenses) }}</span>
+                  <Select v-model="selectedTypeFilter" :options="typeFilterOptions" placeholder="Filter Type" style="width: 140px; margin-left: 0.5rem;" />
+                </div>
                 <IconField class="search-field">
                   <InputIcon><i class="pi pi-search" /></InputIcon>
                   <InputText v-model="filters['global'].value" placeholder="Search..." />
                 </IconField>
               </div>
             </template>
-            <Column selectionMode="multiple" style="width:2.5rem" :exportable="false"></Column>
             <Column field="date" header="Date" sortable style="min-width:7rem"></Column>
             <Column field="Transcation" header="Amount" sortable style="min-width:8rem">
               <template #body="{ data }">
                 <span class="amount-out">{{ formatCurrency(data.Transcation) }}</span>
+              </template>
+            </Column>
+            <Column field="Type" header="Type" sortable style="min-width:8rem">
+              <template #body="{ data }">
+                <span class="type-badge" :class="'badge--' + (data.Type || 'Variable').toLowerCase().replace(' ', '')">
+                  {{ data.Type || 'Variable' }}
+                </span>
               </template>
             </Column>
             <Column field="Category" header="Category" sortable style="min-width:9rem">
@@ -118,7 +64,11 @@
                 <span class="category-chip">{{ data.Category || '—' }}</span>
               </template>
             </Column>
-            <Column field="Reason" header="Reason" sortable style="min-width:12rem"></Column>
+            <Column field="Reason" header="Reason" sortable style="min-width:12rem">
+              <template #body="{ data }">
+                {{ data.Reason || '—' }}
+              </template>
+            </Column>
             <Column :exportable="false" style="min-width:6rem">
               <template #body="{ data }">
                 <div class="row-actions">
@@ -131,6 +81,13 @@
 
           <!-- Mobile cards -->
           <div class="mobile-list">
+            <div class="table-header" style="padding:0.875rem 0.875rem 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <span class="table-title">Expenses</span>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="expense-total-badge">{{ formatCurrency(transactionStore.totalExpenses) }}</span>
+                <Select v-model="selectedTypeFilter" :options="typeFilterOptions" placeholder="Filter Type" style="width: 120px;" />
+              </div>
+            </div>
             <div class="mobile-search">
               <i class="pi pi-search"></i>
               <input v-model="mobileSearch" placeholder="Search expenses..." class="mobile-search-input" />
@@ -139,9 +96,12 @@
             <div v-for="item in filteredExpenses" :key="item.id" class="mobile-card">
               <div class="mc-top">
                 <span class="mc-amount amount-out">{{ formatCurrency(item.Transcation) }}</span>
+                <span class="type-badge" :class="'badge--' + (item.Type || 'Variable').toLowerCase().replace(' ', '')">
+                  {{ item.Type || 'Variable' }}
+                </span>
                 <span class="category-chip">{{ item.Category || '—' }}</span>
               </div>
-              <div class="mc-reason">{{ item.Reason }}</div>
+              <div class="mc-reason">{{ item.Reason || '—' }}</div>
               <div class="mc-bottom">
                 <span class="mc-date"><i class="pi pi-calendar"></i> {{ item.date }}</span>
                 <div class="row-actions">
@@ -155,8 +115,17 @@
 
         <!-- ── INCOMES VIEW ── -->
         <div v-if="viewMode === 'incomes'">
+          <div class="table-actions">
+            <div class="action-group">
+              <Button label="Add Income" icon="pi pi-plus" size="small" class="add-income-btn" @click="openIncomeDialog" />
+            </div>
+            <div class="action-group">
+              <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
+            </div>
+          </div>
+
           <!-- Desktop table -->
-          <DataTable :value="transactionStore.incomes" dataKey="id" :paginator="true" :rows="8"
+          <DataTable ref="dtIncomes" :value="transactionStore.incomes" dataKey="id" :paginator="true" :rows="8"
                      paginatorTemplate="PrevPageLink PageLinks NextPageLink"
                      class="modern-table desktop-table">
             <template #header>
@@ -173,18 +142,25 @@
             </Column>
             <Column field="source" header="Source" sortable style="min-width:10rem"></Column>
             <Column field="note" header="Note" style="min-width:12rem"></Column>
-            <Column :exportable="false" style="min-width:4rem">
+            <Column :exportable="false" style="min-width:6rem">
               <template #body="{ data }">
-                <button class="row-btn row-btn--danger" @click="removeIncome(data.id)"><i class="pi pi-trash"></i></button>
+                <div class="row-actions">
+                  <button class="row-btn" @click="editIncome(data)"><i class="pi pi-pencil"></i></button>
+                  <button class="row-btn row-btn--danger" @click="removeIncome(data.id)"><i class="pi pi-trash"></i></button>
+                </div>
               </template>
             </Column>
           </DataTable>
 
           <!-- Mobile cards -->
           <div class="mobile-list">
-            <div class="table-header" style="padding:0.875rem 0.875rem 0">
+            <div class="table-header" style="padding:0.875rem 0.875rem 0; display: flex; justify-content: space-between; align-items: center;">
               <span class="table-title">All Incomes</span>
               <span class="income-total-badge">{{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
+            </div>
+            <div class="mobile-actions-row" style="padding: 0.5rem 0.875rem; display: flex; gap: 0.5rem;">
+              <Button label="Add Income" icon="pi pi-plus" size="small" class="add-income-btn" style="width: 100%;" @click="openIncomeDialog" />
+              <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
             </div>
             <div v-if="transactionStore.incomes.length === 0" class="mobile-empty">No incomes yet.</div>
             <div v-for="item in transactionStore.incomes" :key="item.id" class="mobile-card mobile-card--income">
@@ -195,7 +171,10 @@
               <div v-if="item.note" class="mc-reason">{{ item.note }}</div>
               <div class="mc-bottom">
                 <span class="mc-date"><i class="pi pi-calendar"></i> {{ item.date }}</span>
-                <button class="row-btn row-btn--danger" @click="removeIncome(item.id)"><i class="pi pi-trash"></i></button>
+                <div class="row-actions">
+                  <button class="row-btn" @click="editIncome(item)"><i class="pi pi-pencil"></i></button>
+                  <button class="row-btn row-btn--danger" @click="removeIncome(item.id)"><i class="pi pi-trash"></i></button>
+                </div>
               </div>
             </div>
           </div>
@@ -236,6 +215,10 @@
           </div>
           <small v-if="submitted && !transaction.Category" class="field-error">Category is required.</small>
         </div>
+        <div class="field-group">
+          <label class="field-label">Type</label>
+          <Select v-model="transaction.Type" :options="typesOptions" placeholder="Select type" fluid />
+        </div>
         <div v-if="showNewCategoryInput" class="custom-cat-box">
           <label class="field-label">New Category Name</label>
           <div class="cat-row">
@@ -244,9 +227,8 @@
           </div>
         </div>
         <div class="field-group">
-          <label class="field-label">Reason / Description</label>
+          <label class="field-label">Reason / Description <span style="color:#64748b;font-weight:400">(optional)</span></label>
           <Textarea v-model="transaction.Reason" rows="3" placeholder="e.g. Grocery, Rent, Internet..." fluid />
-          <small v-if="submitted && !transaction.Reason?.trim()" class="field-error">Reason is required.</small>
         </div>
       </div>
       <template #footer>
@@ -280,7 +262,7 @@
     </Dialog>
 
     <!-- Add Income Dialog -->
-    <Dialog v-model:visible="incomeDialog" :style="{ width: '92vw', maxWidth: '440px' }" header="Add New Income" :modal="true" class="p-fluid">
+    <Dialog v-model:visible="incomeDialog" :style="{ width: '92vw', maxWidth: '440px' }" :header="newIncome.id ? 'Edit Income' : 'Add New Income'" :modal="true" class="p-fluid">
       <div class="dialog-body">
         <div class="field-group">
           <label class="field-label">Amount</label>
@@ -289,8 +271,8 @@
         </div>
         <div class="field-group">
           <label class="field-label">Source</label>
-          <InputText v-model="newIncome.source" placeholder="e.g. Freelance, Bonus, Side job..." fluid />
-          <small v-if="incomeSubmitted && !newIncome.source?.trim()" class="field-error">Source is required.</small>
+          <Select v-model="newIncome.source" :options="incomeSources" placeholder="Select source" filter fluid />
+          <small v-if="incomeSubmitted && !newIncome.source" class="field-error">Source is required.</small>
         </div>
         <div class="field-group">
           <label class="field-label">Note <span style="color:#64748b;font-weight:400">(optional)</span></label>
@@ -299,7 +281,7 @@
       </div>
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" text @click="incomeDialog = false; incomeSubmitted = false" />
-        <Button label="Add Income" icon="pi pi-check" class="add-income-btn" @click="addIncome" />
+        <Button :label="newIncome.id ? 'Update Income' : 'Add Income'" icon="pi pi-check" class="add-income-btn" @click="addIncome" />
       </template>
     </Dialog>
 
@@ -338,17 +320,43 @@ const incomeDialog = ref(false);
 const incomeSubmitted = ref(false);
 const newIncome = ref({ amount: null, source: '', note: '' });
 
+const incomeSources = [
+  'Salary', 'Bonus', 'Instapay', 'Freelance', 'Consulting', 'Business Revenue',
+  'Part-time Job', 'Overtime Pay', 'Commission', 'Rental Income',
+  'Dividends', 'Stock Returns', 'Capital Gains', 'Interest Income',
+  'Pension', 'Government Grant', 'Scholarship', 'Inheritance',
+  'Gift', 'Side Project', 'Online Sales', 'Royalties', 'Other'
+];
+
 const openIncomeDialog = () => {
   newIncome.value = { amount: null, source: '', note: '' };
   incomeSubmitted.value = false;
   incomeDialog.value = true;
 };
 
+const editIncome = (incomeDetails) => {
+  newIncome.value = {
+    id: incomeDetails.id,
+    amount: Number(incomeDetails.amount || 0),
+    source: incomeDetails.source || '',
+    note: incomeDetails.note || '',
+    date: incomeDetails.date || ''
+  };
+  incomeSubmitted.value = false;
+  incomeDialog.value = true;
+};
+
 const addIncome = () => {
   incomeSubmitted.value = true;
-  if (!newIncome.value.amount || !newIncome.value.source?.trim()) return;
-  transactionStore.AddIncome(newIncome.value);
-  toast.add({ severity: 'success', summary: 'Income Added', detail: `+${formatCurrency(newIncome.value.amount)} from ${newIncome.value.source}`, life: 3000 });
+  if (!newIncome.value.amount || !newIncome.value.source) return;
+  
+  if (newIncome.value.id) {
+    transactionStore.UpdateIncome(newIncome.value);
+    toast.add({ severity: 'success', summary: 'Income Updated', detail: `Updated entry for ${newIncome.value.source}`, life: 3000 });
+  } else {
+    transactionStore.AddIncome(newIncome.value);
+    toast.add({ severity: 'success', summary: 'Income Added', detail: `+${formatCurrency(newIncome.value.amount)} from ${newIncome.value.source}`, life: 3000 });
+  }
   newIncome.value = { amount: null, source: '', note: '' };
   incomeSubmitted.value = false;
   incomeDialog.value = false;
@@ -395,6 +403,7 @@ const addNewCategory = () => {
 
 // ── Expenses CRUD ──
 const dt = ref();
+const dtIncomes = ref();
 const transactionDialog = ref(false);
 const deleteTransactionDialog = ref(false);
 const deleteTransactionsDialog = ref(false);
@@ -403,12 +412,26 @@ const selectedTransactions = ref();
 const submitted = ref(false);
 const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } });
 
+// ── Type Filtering & Dropdown Setup ──
+const selectedTypeFilter = ref('All');
+const typeFilterOptions = ['All', 'Fixed', 'Variable', 'One-time', 'Emergency', 'Investment', 'Personal'];
+const typesOptions = ['Fixed', 'Variable', 'One-time', 'Emergency', 'Investment', 'Personal'];
+
+const expensesList = computed(() => {
+  let txns = transactionStore.transactions;
+  if (selectedTypeFilter.value && selectedTypeFilter.value !== 'All') {
+    txns = txns.filter(t => (t.Type || 'Variable') === selectedTypeFilter.value);
+  }
+  return txns;
+});
+
 // ── Mobile search & list ──
 const mobileSearch = ref('');
 const filteredExpenses = computed(() => {
   const q = mobileSearch.value.trim().toLowerCase();
-  if (!q) return transactionStore.transactions;
-  return transactionStore.transactions.filter(t =>
+  const base = expensesList.value;
+  if (!q) return base;
+  return base.filter(t =>
     (t.Reason || '').toLowerCase().includes(q) ||
     (t.Category || '').toLowerCase().includes(q) ||
     String(t.Transcation).includes(q) ||
@@ -416,17 +439,26 @@ const filteredExpenses = computed(() => {
   );
 });
 
-const openNew = () => { transaction.value = {}; submitted.value = false; transactionDialog.value = true; };
+const openNew = () => { 
+  transaction.value = { Type: 'Variable' }; 
+  submitted.value = false; 
+  transactionDialog.value = true; 
+};
 const hideDialog = () => { transactionDialog.value = false; submitted.value = false; };
 
 const saveTransaction = () => {
   submitted.value = true;
-  if (transaction.value.Transcation && transaction.value.Category && transaction.value.Reason?.trim()) {
-    if (transaction.value.id) {
-      transactionStore.UpdateTransaction(transaction.value);
+  if (transaction.value.Transcation && transaction.value.Category) {
+    const payload = {
+      ...transaction.value,
+      Transcation: Number(transaction.value.Transcation),
+      Type: transaction.value.Type || 'Variable'
+    };
+    if (payload.id) {
+      transactionStore.UpdateTransaction(payload);
       toast.add({ severity: 'success', summary: 'Updated', detail: 'Transaction updated.', life: 3000 });
     } else {
-      transactionStore.AddTransaction(transaction.value);
+      transactionStore.AddTransaction(payload);
       toast.add({ severity: 'success', summary: 'Added', detail: 'New expense added.', life: 3000 });
     }
     transactionDialog.value = false;
@@ -434,7 +466,10 @@ const saveTransaction = () => {
   }
 };
 
-const editTransaction = (txn) => { transaction.value = { ...txn }; transactionDialog.value = true; };
+const editTransaction = (txn) => { 
+  transaction.value = { ...txn, Type: txn.Type || 'Variable' }; 
+  transactionDialog.value = true; 
+};
 const confirmDeleteTransaction = (txn) => { transaction.value = txn; deleteTransactionDialog.value = true; };
 const deleteTransaction = () => {
   transactionStore.RemoveTransaction(transaction.value.id);
@@ -451,6 +486,7 @@ const deleteSelectedTransactions = () => {
 };
 
 const exportCSV = () => dt.value.exportCSV();
+const exportIncomesCSV = () => dtIncomes.value.exportCSV();
 
 const handleImport = (event) => {
   const file = event.files[0];
@@ -724,6 +760,14 @@ const handleImport = (event) => {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   border: 1px solid rgba(16,185,129,0.3);
+}
+.expense-total-badge {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f87171;
+  font-size: 0.8rem; font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
 /* ── Amount styles ── */
