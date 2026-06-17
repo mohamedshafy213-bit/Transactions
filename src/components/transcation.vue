@@ -8,11 +8,11 @@
         <!-- Switcher -->
         <div class="switcher-bar">
           <button class="switcher-btn" :class="{ active: viewMode === 'expenses' }" @click="viewMode = 'expenses'">
-            <i class="pi pi-arrow-up-right"></i> Expenses
+            <i class="pi pi-arrow-up-right"></i> {{ i18nStore.t('expenses') }}
             <span class="switcher-badge">{{ transactionStore.transactions.length }}</span>
           </button>
           <button class="switcher-btn" :class="{ active: viewMode === 'incomes' }" @click="viewMode = 'incomes'">
-            <i class="pi pi-arrow-down-left"></i> Incomes
+            <i class="pi pi-arrow-down-left"></i> {{ i18nStore.t('incomes') }}
             <span class="switcher-badge">{{ transactionStore.incomes.length }}</span>
           </button>
         </div>
@@ -21,10 +21,10 @@
         <div v-if="viewMode === 'expenses'">
           <div class="table-actions">
             <div class="action-group">
-              <Button label="New" icon="pi pi-plus" size="small" @click="openNew" />
+              <Button :label="i18nStore.t('btnNew')" icon="pi pi-plus" size="small" @click="openNew" />
             </div>
             <div class="action-group">
-              <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV" />
+              <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV" />
             </div>
           </div>
 
@@ -36,35 +36,35 @@
             <template #header>
               <div class="table-header" style="flex-wrap: wrap; gap: 0.75rem;">
                 <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap: wrap;">
-                  <span class="table-title">Expenses</span>
-                  <span class="expense-total-badge">Total: {{ formatCurrency(transactionStore.totalExpenses) }}</span>
-                  <Select v-model="selectedTypeFilter" :options="typeFilterOptions" placeholder="Filter Type" style="width: 140px; margin-left: 0.5rem;" />
+                  <span class="table-title">{{ i18nStore.t('expenses') }}</span>
+                  <span class="expense-total-badge">{{ i18nStore.t('expenseTotal') }} {{ formatCurrency(transactionStore.totalExpenses) }}</span>
+                  <Select v-model="selectedTypeFilter" :options="typeFilterOptions" :placeholder="i18nStore.t('filterType')" style="width: 140px; margin-left: 0.5rem;" />
                 </div>
                 <IconField class="search-field">
                   <InputIcon><i class="pi pi-search" /></InputIcon>
-                  <InputText v-model="filters['global'].value" placeholder="Search..." />
+                  <InputText v-model="filters['global'].value" :placeholder="i18nStore.t('searchPlaceholder')" />
                 </IconField>
               </div>
             </template>
             <Column field="date" header="Date" sortable style="min-width:7rem"></Column>
-            <Column field="Transcation" header="Amount" sortable style="min-width:8rem">
+            <Column field="Transcation" :header="i18nStore.t('amount')" sortable style="min-width:8rem">
               <template #body="{ data }">
                 <span class="amount-out">{{ formatCurrency(data.Transcation) }}</span>
               </template>
             </Column>
-            <Column field="Type" header="Type" sortable style="min-width:8rem">
+            <Column field="Type" :header="i18nStore.t('type')" sortable style="min-width:8rem">
               <template #body="{ data }">
                 <span class="type-badge" :class="'badge--' + (data.Type || 'Variable').toLowerCase().replace(' ', '')">
-                  {{ data.Type || 'Variable' }}
+                  {{ i18nStore.t('type' + (data.Type || 'Variable')) }}
                 </span>
               </template>
             </Column>
-            <Column field="Category" header="Category" sortable style="min-width:9rem">
+            <Column field="Category" :header="i18nStore.t('category')" sortable style="min-width:9rem">
               <template #body="{ data }">
                 <span class="category-chip">{{ data.Category || '—' }}</span>
               </template>
             </Column>
-            <Column field="Reason" header="Reason" sortable style="min-width:12rem">
+            <Column field="Reason" :header="i18nStore.t('reason')" sortable style="min-width:12rem">
               <template #body="{ data }">
                 {{ data.Reason || '—' }}
               </template>
@@ -82,22 +82,22 @@
           <!-- Mobile cards -->
           <div class="mobile-list">
             <div class="table-header" style="padding:0.875rem 0.875rem 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-              <span class="table-title">Expenses</span>
+              <span class="table-title">{{ i18nStore.t('expenses') }}</span>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span class="expense-total-badge">{{ formatCurrency(transactionStore.totalExpenses) }}</span>
-                <Select v-model="selectedTypeFilter" :options="typeFilterOptions" placeholder="Filter Type" style="width: 120px;" />
+                <Select v-model="selectedTypeFilter" :options="typeFilterOptions" :placeholder="i18nStore.t('filterType')" style="width: 120px;" />
               </div>
             </div>
             <div class="mobile-search">
               <i class="pi pi-search"></i>
-              <input v-model="mobileSearch" placeholder="Search expenses..." class="mobile-search-input" />
+              <input v-model="mobileSearch" :placeholder="i18nStore.t('searchExpensesPlaceholder')" class="mobile-search-input" />
             </div>
-            <div v-if="filteredExpenses.length === 0" class="mobile-empty">No expenses found.</div>
+            <div v-if="filteredExpenses.length === 0" class="mobile-empty">{{ i18nStore.t('noSpendingRecorded') }}</div>
             <div v-for="item in filteredExpenses" :key="item.id" class="mobile-card">
               <div class="mc-top">
                 <span class="mc-amount amount-out">{{ formatCurrency(item.Transcation) }}</span>
                 <span class="type-badge" :class="'badge--' + (item.Type || 'Variable').toLowerCase().replace(' ', '')">
-                  {{ item.Type || 'Variable' }}
+                  {{ i18nStore.t('type' + (item.Type || 'Variable')) }}
                 </span>
                 <span class="category-chip">{{ item.Category || '—' }}</span>
               </div>
@@ -117,10 +117,10 @@
         <div v-if="viewMode === 'incomes'">
           <div class="table-actions">
             <div class="action-group">
-              <Button label="Add Income" icon="pi pi-plus" size="small" class="add-income-btn" @click="openIncomeDialog" />
+              <Button :label="i18nStore.t('addIncome')" icon="pi pi-plus" size="small" class="add-income-btn" @click="openIncomeDialog" />
             </div>
             <div class="action-group">
-              <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
+              <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
             </div>
           </div>
 
@@ -130,18 +130,22 @@
                      class="modern-table desktop-table">
             <template #header>
               <div class="table-header">
-                <span class="table-title">All Incomes</span>
-                <span class="income-total-badge">Total: {{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
+                <span class="table-title">{{ i18nStore.t('incomes') }}</span>
+                <span class="income-total-badge">{{ i18nStore.t('incomeTotal') }} {{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
               </div>
             </template>
             <Column field="date" header="Date" sortable style="min-width:7rem"></Column>
-            <Column field="amount" header="Amount" sortable style="min-width:8rem">
+            <Column field="amount" :header="i18nStore.t('amount')" sortable style="min-width:8rem">
               <template #body="{ data }">
                 <span class="amount-in">+{{ formatCurrency(data.amount) }}</span>
               </template>
             </Column>
-            <Column field="source" header="Source" sortable style="min-width:10rem"></Column>
-            <Column field="note" header="Note" style="min-width:12rem"></Column>
+            <Column field="source" :header="i18nStore.t('source')" sortable style="min-width:10rem">
+              <template #body="{ data }">
+                {{ data.source }}
+              </template>
+            </Column>
+            <Column field="note" :header="i18nStore.t('note')" style="min-width:12rem"></Column>
             <Column :exportable="false" style="min-width:6rem">
               <template #body="{ data }">
                 <div class="row-actions">
@@ -155,14 +159,14 @@
           <!-- Mobile cards -->
           <div class="mobile-list">
             <div class="table-header" style="padding:0.875rem 0.875rem 0; display: flex; justify-content: space-between; align-items: center;">
-              <span class="table-title">All Incomes</span>
+              <span class="table-title">{{ i18nStore.t('incomes') }}</span>
               <span class="income-total-badge">{{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
             </div>
             <div class="mobile-actions-row" style="padding: 0.5rem 0.875rem; display: flex; gap: 0.5rem;">
-              <Button label="Add Income" icon="pi pi-plus" size="small" class="add-income-btn" style="width: 100%;" @click="openIncomeDialog" />
-              <Button label="Export" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
+              <Button :label="i18nStore.t('addIncome')" icon="pi pi-plus" size="small" class="add-income-btn" style="width: 100%;" @click="openIncomeDialog" />
+              <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
             </div>
-            <div v-if="transactionStore.incomes.length === 0" class="mobile-empty">No incomes yet.</div>
+            <div v-if="transactionStore.incomes.length === 0" class="mobile-empty">{{ i18nStore.t('historyEmpty') }}</div>
             <div v-for="item in transactionStore.incomes" :key="item.id" class="mobile-card mobile-card--income">
               <div class="mc-top">
                 <span class="mc-amount amount-in">+{{ formatCurrency(item.amount) }}</span>
@@ -184,104 +188,80 @@
 
     <!-- ─────── DIALOGS ─────── -->
 
-    <!-- Edit Salary -->
-    <Dialog v-model:visible="salaryDialog" :style="{ width: '92vw', maxWidth: '420px' }" header="Update Monthly Salary" :modal="true" class="p-fluid">
-      <div class="dialog-body">
-        <label class="field-label">Monthly Salary (Base)</label>
-        <InputNumber v-model="tempSalary" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="saveSalary" />
-      </div>
-      <template #footer>
-        <Button label="Cancel" icon="pi pi-times" text @click="salaryDialog = false" />
-        <Button label="Save" icon="pi pi-check" @click="saveSalary" />
-      </template>
-    </Dialog>
-
     <!-- Add/Edit Transaction -->
     <Dialog v-model:visible="transactionDialog" :style="{ width: '92vw', maxWidth: '460px' }"
-            :header="transaction.id ? 'Edit Expense' : 'New Expense'" :modal="true" class="p-fluid">
+            :header="transaction.id ? i18nStore.t('editCommitment') : i18nStore.t('newCommitment')" :modal="true" class="p-fluid">
       <div class="dialog-body">
         <div class="field-group">
-          <label class="field-label">Amount</label>
+          <label class="field-label">{{ i18nStore.t('amount') }}</label>
           <InputNumber v-model="transaction.Transcation" mode="currency" currency="USD" locale="en-US" fluid autofocus />
-          <small v-if="submitted && !transaction.Transcation" class="field-error">Amount is required.</small>
+          <small v-if="submitted && !transaction.Transcation" class="field-error">{{ i18nStore.t('validationInstallmentRequired') }}</small>
         </div>
         <div class="field-group">
-          <label class="field-label">Category</label>
+          <label class="field-label">{{ i18nStore.t('category') }}</label>
           <div class="cat-row">
             <Select v-model="transaction.Category" :options="categories" placeholder="Select category" filter class="flex-1" />
             <button class="icon-btn icon-btn--secondary" @click="showNewCategoryInput = !showNewCategoryInput">
               <i class="pi pi-plus"></i>
             </button>
           </div>
-          <small v-if="submitted && !transaction.Category" class="field-error">Category is required.</small>
+          <small v-if="submitted && !transaction.Category" class="field-error">{{ i18nStore.t('category') }} {{ i18nStore.t('validationNameRequired') }}</small>
         </div>
         <div class="field-group">
-          <label class="field-label">Type</label>
+          <label class="field-label">{{ i18nStore.t('type') }}</label>
           <Select v-model="transaction.Type" :options="typesOptions" placeholder="Select type" fluid />
         </div>
         <div v-if="showNewCategoryInput" class="custom-cat-box">
-          <label class="field-label">New Category Name</label>
+          <label class="field-label">{{ i18nStore.t('newCategoryName') }}</label>
           <div class="cat-row">
             <InputText v-model="newCategoryName" placeholder="Category name..." class="flex-1" />
-            <Button label="Add" size="small" @click="addNewCategory" />
+            <Button :label="i18nStore.t('btnAdd')" size="small" @click="addNewCategory" />
           </div>
         </div>
         <div class="field-group">
-          <label class="field-label">Reason / Description <span style="color:#64748b;font-weight:400">(optional)</span></label>
+          <label class="field-label">{{ i18nStore.t('reason') }}</label>
           <Textarea v-model="transaction.Reason" rows="3" placeholder="e.g. Grocery, Rent, Internet..." fluid />
         </div>
       </div>
       <template #footer>
-        <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-        <Button :label="transaction.id ? 'Update' : 'Save'" icon="pi pi-check" @click="saveTransaction" />
+        <Button :label="i18nStore.t('btnCancel')" icon="pi pi-times" text @click="hideDialog" />
+        <Button :label="transaction.id ? i18nStore.t('btnUpdate') : i18nStore.t('btnSave')" icon="pi pi-check" @click="saveTransaction" />
       </template>
     </Dialog>
 
     <!-- Delete Single -->
-    <Dialog v-model:visible="deleteTransactionDialog" :style="{ width: '92vw', maxWidth: '400px' }" header="Delete Expense" :modal="true">
+    <Dialog v-model:visible="deleteTransactionDialog" :style="{ width: '92vw', maxWidth: '400px' }" :header="i18nStore.t('deleteExpenseHeader')" :modal="true">
       <div class="confirm-body">
         <div class="confirm-icon"><i class="pi pi-exclamation-triangle"></i></div>
-        <p>Delete expense: <strong>{{ transaction.Reason }}</strong>?</p>
+        <p>{{ i18nStore.t('deleteExpenseConfirm') }}</p>
       </div>
       <template #footer>
-        <Button label="Cancel" text @click="deleteTransactionDialog = false" severity="secondary" />
-        <Button label="Delete" icon="pi pi-trash" @click="deleteTransaction" severity="danger" />
-      </template>
-    </Dialog>
-
-    <!-- Delete Bulk -->
-    <Dialog v-model:visible="deleteTransactionsDialog" :style="{ width: '92vw', maxWidth: '400px' }" header="Delete Selected" :modal="true">
-      <div class="confirm-body">
-        <div class="confirm-icon"><i class="pi pi-exclamation-triangle"></i></div>
-        <p>Delete all selected transactions?</p>
-      </div>
-      <template #footer>
-        <Button label="Cancel" text @click="deleteTransactionsDialog = false" severity="secondary" />
-        <Button label="Delete All" icon="pi pi-trash" @click="deleteSelectedTransactions" severity="danger" />
+        <Button :label="i18nStore.t('btnCancel')" text @click="deleteTransactionDialog = false" severity="secondary" />
+        <Button :label="i18nStore.t('btnDelete')" icon="pi pi-trash" @click="deleteTransaction" severity="danger" />
       </template>
     </Dialog>
 
     <!-- Add Income Dialog -->
-    <Dialog v-model:visible="incomeDialog" :style="{ width: '92vw', maxWidth: '440px' }" :header="newIncome.id ? 'Edit Income' : 'Add New Income'" :modal="true" class="p-fluid">
+    <Dialog v-model:visible="incomeDialog" :style="{ width: '92vw', maxWidth: '440px' }" :header="newIncome.id ? i18nStore.t('editIncome') : i18nStore.t('addIncome')" :modal="true" class="p-fluid">
       <div class="dialog-body">
         <div class="field-group">
-          <label class="field-label">Amount</label>
+          <label class="field-label">{{ i18nStore.t('amount') }}</label>
           <InputNumber v-model="newIncome.amount" mode="currency" currency="USD" locale="en-US" fluid autofocus @keyup.enter="addIncome" />
-          <small v-if="incomeSubmitted && !newIncome.amount" class="field-error">Amount is required.</small>
+          <small v-if="incomeSubmitted && !newIncome.amount" class="field-error">{{ i18nStore.t('validationInstallmentRequired') }}</small>
         </div>
         <div class="field-group">
-          <label class="field-label">Source</label>
+          <label class="field-label">{{ i18nStore.t('source') }}</label>
           <Select v-model="newIncome.source" :options="incomeSources" placeholder="Select source" filter fluid />
-          <small v-if="incomeSubmitted && !newIncome.source" class="field-error">Source is required.</small>
+          <small v-if="incomeSubmitted && !newIncome.source" class="field-error">{{ i18nStore.t('source') }} {{ i18nStore.t('validationNameRequired') }}</small>
         </div>
         <div class="field-group">
-          <label class="field-label">Note <span style="color:#64748b;font-weight:400">(optional)</span></label>
+          <label class="field-label">{{ i18nStore.t('note') }}</label>
           <InputText v-model="newIncome.note" placeholder="Any additional details..." fluid />
         </div>
       </div>
       <template #footer>
-        <Button label="Cancel" icon="pi pi-times" text @click="incomeDialog = false; incomeSubmitted = false" />
-        <Button :label="newIncome.id ? 'Update Income' : 'Add Income'" icon="pi pi-check" class="add-income-btn" @click="addIncome" />
+        <Button :label="i18nStore.t('btnCancel')" icon="pi pi-times" text @click="incomeDialog = false; incomeSubmitted = false" />
+        <Button :label="newIncome.id ? i18nStore.t('editIncome') : i18nStore.t('addIncome')" icon="pi pi-check" class="add-income-btn" @click="addIncome" />
       </template>
     </Dialog>
 
@@ -294,14 +274,18 @@ import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { useTransactionStore } from '../stores/Transaction';
 import { useUserStore } from '../stores/user';
+import { useI18nStore } from '../stores/i18n';
 import { useRouter } from 'vue-router';
 
 const transactionStore = useTransactionStore();
 const userStore = useUserStore();
+const i18nStore = useI18nStore();
 const router = useRouter();
 const toast = useToast();
 
-onMounted(() => { transactionStore.Setremind(); });
+onMounted(() => { 
+  transactionStore.Setremind(); 
+});
 
 // ── View mode ──
 const viewMode = ref('expenses');
@@ -311,9 +295,6 @@ const formatCurrency = (v) =>
   (v !== undefined && v !== null)
     ? Number(v).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
     : '$0.00';
-
-// ── Logout ──
-const logout = () => { userStore.logout(); router.push('/login'); };
 
 // ── New Income ──
 const incomeDialog = ref(false);
@@ -352,10 +333,10 @@ const addIncome = () => {
   
   if (newIncome.value.id) {
     transactionStore.UpdateIncome(newIncome.value);
-    toast.add({ severity: 'success', summary: 'Income Updated', detail: `Updated entry for ${newIncome.value.source}`, life: 3000 });
+    toast.add({ severity: 'success', summary: i18nStore.t('toastSuccess'), detail: `${i18nStore.t('toastUpdated')}: ${newIncome.value.source}`, life: 3000 });
   } else {
     transactionStore.AddIncome(newIncome.value);
-    toast.add({ severity: 'success', summary: 'Income Added', detail: `+${formatCurrency(newIncome.value.amount)} from ${newIncome.value.source}`, life: 3000 });
+    toast.add({ severity: 'success', summary: i18nStore.t('toastSuccess'), detail: `${i18nStore.t('toastAdded')}: +${formatCurrency(newIncome.value.amount)}`, life: 3000 });
   }
   newIncome.value = { amount: null, source: '', note: '' };
   incomeSubmitted.value = false;
@@ -364,17 +345,7 @@ const addIncome = () => {
 
 const removeIncome = (id) => {
   transactionStore.RemoveIncome(id);
-  toast.add({ severity: 'success', summary: 'Income Removed', detail: 'Income entry deleted.', life: 2000 });
-};
-
-// ── Salary ──
-const salaryDialog = ref(false);
-const tempSalary = ref(0);
-const startEditSalary = () => { tempSalary.value = transactionStore.salary; salaryDialog.value = true; };
-const saveSalary = () => {
-  transactionStore.UpdateSalary(tempSalary.value);
-  salaryDialog.value = false;
-  toast.add({ severity: 'success', summary: 'Salary Updated', detail: `Base salary set to ${formatCurrency(transactionStore.salary)}`, life: 3000 });
+  toast.add({ severity: 'success', summary: i18nStore.t('toastSuccess'), detail: i18nStore.t('toastDeleted'), life: 2000 });
 };
 
 // ── Categories ──
@@ -397,18 +368,15 @@ const addNewCategory = () => {
     transaction.value.Category = name;
     newCategoryName.value = '';
     showNewCategoryInput.value = false;
-    toast.add({ severity: 'success', summary: 'Category added', detail: name, life: 2000 });
+    toast.add({ severity: 'success', summary: i18nStore.t('toastSuccess'), detail: name, life: 2000 });
   }
 };
 
 // ── Expenses CRUD ──
 const dt = ref();
-const dtIncomes = ref();
 const transactionDialog = ref(false);
 const deleteTransactionDialog = ref(false);
-const deleteTransactionsDialog = ref(false);
 const transaction = ref({});
-const selectedTransactions = ref();
 const submitted = ref(false);
 const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } });
 
@@ -456,10 +424,10 @@ const saveTransaction = () => {
     };
     if (payload.id) {
       transactionStore.UpdateTransaction(payload);
-      toast.add({ severity: 'success', summary: 'Updated', detail: 'Transaction updated.', life: 3000 });
+      toast.add({ severity: 'success', summary: i18nStore.t('toastSuccess'), detail: i18nStore.t('toastUpdated'), life: 3000 });
     } else {
       transactionStore.AddTransaction(payload);
-      toast.add({ severity: 'success', summary: 'Added', detail: 'New expense added.', life: 3000 });
+      toast.add({ severity: 'success', summary: i18nStore.t('toastSuccess'), detail: i18nStore.t('toastAdded'), life: 3000 });
     }
     transactionDialog.value = false;
     transaction.value = {};
@@ -475,52 +443,11 @@ const deleteTransaction = () => {
   transactionStore.RemoveTransaction(transaction.value.id);
   deleteTransactionDialog.value = false;
   transaction.value = {};
-  toast.add({ severity: 'success', summary: 'Deleted', detail: 'Expense removed.', life: 2000 });
-};
-const confirmDeleteSelected = () => { deleteTransactionsDialog.value = true; };
-const deleteSelectedTransactions = () => {
-  transactionStore.RemoveTransactions(selectedTransactions.value.map(v => v.id));
-  deleteTransactionsDialog.value = false;
-  selectedTransactions.value = null;
-  toast.add({ severity: 'success', summary: 'Deleted', detail: 'Selected expenses removed.', life: 2000 });
+  toast.add({ severity: 'success', summary: i18nStore.t('toastSuccess'), detail: i18nStore.t('toastDeleted'), life: 2000 });
 };
 
 const exportCSV = () => dt.value.exportCSV();
 const exportIncomesCSV = () => dtIncomes.value.exportCSV();
-
-const handleImport = (event) => {
-  const file = event.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const content = e.target.result;
-      if (file.name.endsWith('.json')) {
-        const data = JSON.parse(content);
-        if (Array.isArray(data)) data.forEach(item => transactionStore.AddTransaction(item));
-      } else {
-        const lines = content.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        for (let i = 1; i < lines.length; i++) {
-          if (!lines[i].trim()) continue;
-          const vals = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-          const row = {};
-          headers.forEach((h, idx) => { row[h] = vals[idx]; });
-          transactionStore.AddTransaction({
-            date: row.Date || row.date || '',
-            Transcation: Number(row.Amount || row.Transcation || 0),
-            Category: row.Category || '',
-            Reason: row.Reason || ''
-          });
-        }
-      }
-      toast.add({ severity: 'success', summary: 'Imported', detail: 'Data imported successfully.', life: 3000 });
-    } catch {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to parse file.', life: 3000 });
-    }
-  };
-  reader.readAsText(file);
-};
 </script>
 
 <style scoped>
@@ -531,46 +458,6 @@ const handleImport = (event) => {
   color: #f1f5f9;
   font-family: 'Inter', system-ui, sans-serif;
 }
-
-/* ── Header ── */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
-}
-.header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0.875rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.header-brand { display: flex; align-items: center; gap: 0.625rem; }
-.brand-icon {
-  width: 36px; height: 36px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1rem; color: white;
-}
-.brand-name { font-size: 1.125rem; font-weight: 800; color: #f1f5f9; letter-spacing: -0.025em; }
-.logout-btn {
-  display: flex; align-items: center; gap: 0.375rem;
-  padding: 0.5rem 0.875rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 10px;
-  color: #f87171;
-  font-size: 0.8125rem; font-weight: 600; cursor: pointer;
-  transition: all 0.2s;
-}
-.logout-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: #f87171; }
-.logout-label { display: none; }
-@media (min-width: 480px) { .logout-label { display: inline; } }
 
 /* ── Main ── */
 .app-main {
@@ -632,7 +519,6 @@ const handleImport = (event) => {
   color: #f1f5f9;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.card-actions { display: flex; gap: 0.25rem; margin-top: 0.125rem; }
 .card-hint {
   font-size: clamp(0.55rem, 1.8vw, 0.68rem);
   color: rgba(148, 163, 184, 0.7);
@@ -640,7 +526,6 @@ const handleImport = (event) => {
   margin-top: auto;
   padding-top: 0.5rem;
 }
-.card-hint .pi { font-size: 0.6rem; }
 
 /* ── Icon Button ── */
 .icon-btn {
@@ -654,40 +539,6 @@ const handleImport = (event) => {
 }
 .icon-btn:hover { background: rgba(99,102,241,0.25); border-color: #6366f1; color: #a5b4fc; }
 .icon-btn--secondary { width: 36px; height: 36px; font-size: 0.8rem; border-radius: 10px; }
-
-/* ── Income Trigger Button ── */
-.income-btn-row { padding: 0; }
-
-.income-trigger-btn {
-  width: 100%;
-  display: flex; align-items: center; gap: 0.875rem;
-  background: rgba(16, 185, 129, 0.07);
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  border-radius: 16px;
-  padding: 0.875rem 1.125rem;
-  cursor: pointer; transition: all 0.2s; text-align: left;
-}
-.income-trigger-btn:hover {
-  background: rgba(16, 185, 129, 0.13);
-  border-color: rgba(16, 185, 129, 0.4);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
-}
-.itb-icon {
-  width: 40px; height: 40px; flex-shrink: 0;
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 1rem;
-}
-.itb-text { flex: 1; display: flex; flex-direction: column; gap: 0.125rem; }
-.itb-label { font-size: 0.9375rem; font-weight: 700; color: #d1fae5; }
-.itb-sub { font-size: 0.75rem; color: #6ee7b7; opacity: 0.8; }
-.itb-plus {
-  color: #10b981; font-size: 1rem; flex-shrink: 0;
-  background: rgba(16,185,129,0.15); border-radius: 8px;
-  padding: 0.375rem;
-}
 
 .field-label { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
 
@@ -871,9 +722,7 @@ const handleImport = (event) => {
 :deep(.p-dialog) { border-radius: 16px !important; box-shadow: 0 25px 80px rgba(0,0,0,0.6) !important; }
 
 /* ─── Mobile / Desktop visibility ─── */
-/* Desktop table: hidden on mobile, visible on md+ */
 .desktop-table { display: none; }
-/* Mobile list: visible on mobile, hidden on md+ */
 .mobile-list { display: flex; flex-direction: column; }
 
 @media (min-width: 768px) {

@@ -4,23 +4,36 @@
     <!-- ── 1. PERSONALIZED GREETING & SALARY PILL ── -->
     <header class="greeting-section">
       <div v-if="userStore.loggedInUser === 'Sama'" class="greeting-block">
-        <h1 class="greeting-title">hello cutie sama 🩷</h1>
-        <p class="greeting-subtitle">here's how your money is doing lately 💸</p>
+        <h1 class="greeting-title">{{ i18nStore.t('helloCutieSama') }}</h1>
+        <p class="greeting-subtitle">{{ i18nStore.t('moneyLately') }}</p>
       </div>
       <div v-else-if="userStore.loggedInUser === 'admin'" class="greeting-block">
-        <h1 class="greeting-title">Hello, Admin 👋</h1>
-        <p class="greeting-subtitle">Here's your financial summary</p>
+        <h1 class="greeting-title">{{ i18nStore.t('helloAdmin') }}</h1>
+        <p class="greeting-subtitle">{{ i18nStore.t('financialSummary') }}</p>
       </div>
       <div v-else class="greeting-block">
-        <h1 class="greeting-title">Welcome Back 👋</h1>
-        <p class="greeting-subtitle">Here is your financial overview</p>
+        <h1 class="greeting-title">{{ i18nStore.t('welcomeBack') }}</h1>
+        <p class="greeting-subtitle">{{ i18nStore.t('financialOverview') }}</p>
       </div>
 
-      <!-- Salary Detection Chip -->
-      <div v-if="transactionStore.salary > 0" class="salary-chip">
-        <span>💼 Your salary this month: {{ formatCurrency(transactionStore.salary) }}</span>
+      <!-- Salary Detection Chip (sum of Salary incomes in range) -->
+      <div v-if="salaryFiltered > 0" class="salary-chip">
+        <span>{{ i18nStore.t('yourSalaryThisMonth', { amount: formatCurrency(salaryFiltered) }) }}</span>
       </div>
     </header>
+
+    <!-- ── Warning Alerts Banner ── -->
+    <div v-if="dashboardAlerts.length > 0" class="dashboard-alerts-container">
+      <div 
+        v-for="alert in dashboardAlerts" 
+        :key="alert.id" 
+        class="alert-warning-card" 
+        :class="'alert-' + alert.type"
+      >
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-text">{{ alert.text }}</span>
+      </div>
+    </div>
 
     <!-- ── 2A. DATE FILTER REDESIGN ── -->
     <div class="date-filter-container">
@@ -33,14 +46,14 @@
             @change="applyQuickFilter(activeQuickFilter)" 
             class="mobile-native-select"
           >
-            <option value="today">Today</option>
-            <option value="last7">Last 7 Days</option>
-            <option value="last30">Last 30 Days</option>
-            <option value="thisMonth">This Month</option>
-            <option value="lastMonth">Last Month</option>
-            <option value="thisYear">This Year</option>
-            <option value="allTime">All Time</option>
-            <option value="custom">Custom Range</option>
+            <option value="today">{{ i18nStore.t('today') }}</option>
+            <option value="last7">{{ i18nStore.t('last7') }}</option>
+            <option value="last30">{{ i18nStore.t('last30') }}</option>
+            <option value="thisMonth">{{ i18nStore.t('thisMonth') }}</option>
+            <option value="lastMonth">{{ i18nStore.t('lastMonth') }}</option>
+            <option value="thisYear">{{ i18nStore.t('thisYear') }}</option>
+            <option value="allTime">{{ i18nStore.t('allTime') }}</option>
+            <option value="custom">{{ i18nStore.t('filterCustom') }}</option>
           </select>
           <div class="select-chevron">▼</div>
         </div>
@@ -49,7 +62,7 @@
         <div v-if="activeQuickFilter === 'custom'" class="mobile-custom-range-inputs">
           <div class="custom-range-row">
             <div class="input-group">
-              <label>FROM</label>
+              <label>{{ i18nStore.t('startDate') }}</label>
               <input type="date" v-model="customFromDate" class="date-input" />
             </div>
             <div class="input-group">
@@ -57,7 +70,7 @@
               <input type="date" v-model="customToDate" class="date-input" />
             </div>
           </div>
-          <button class="apply-filter-btn full-width" @click="applyCustomRange">Apply</button>
+          <button class="apply-filter-btn full-width" @click="applyCustomRange">{{ i18nStore.t('btnAdd') }}</button>
         </div>
       </div>
 
@@ -71,35 +84,35 @@
             :class="{ active: activeQuickFilter === pill.value }"
             @click="applyQuickFilter(pill.value)"
           >
-            {{ pill.label }}
+            {{ i18nStore.t(pill.value) }}
           </button>
           <button 
             class="pill-btn" 
             :class="{ active: activeQuickFilter === 'custom' }"
             @click="activeQuickFilter = 'custom'"
           >
-            Custom Range
+            {{ i18nStore.t('filterCustom') }}
           </button>
         </div>
 
         <!-- Desktop Custom Range Inputs -->
         <div v-if="activeQuickFilter === 'custom'" class="desktop-custom-range-picker">
           <div class="picker-group">
-            <label class="picker-label">From</label>
+            <label class="picker-label">{{ i18nStore.t('startDate') }}</label>
             <input type="date" v-model="customFromDate" class="date-input" />
           </div>
           <div class="picker-group">
             <label class="picker-label">To</label>
             <input type="date" v-model="customToDate" class="date-input" />
           </div>
-          <button class="apply-filter-btn" @click="applyCustomRange">Apply Range</button>
-          <button class="reset-filter-btn" @click="resetFilters">Reset</button>
+          <button class="apply-filter-btn" @click="applyCustomRange">{{ i18nStore.t('btnAdd') }}</button>
+          <button class="reset-filter-btn" @click="resetFilters">{{ i18nStore.t('btnCancel') }}</button>
         </div>
       </div>
 
       <!-- Showing Range Text -->
       <div class="date-range-display-text">
-        <span>📅 Showing: {{ friendlyDateRangeText }}</span>
+        <span>{{ i18nStore.t('showingData', { range: friendlyDateRangeText }) }}</span>
       </div>
     </div>
 
@@ -109,40 +122,40 @@
       <div class="kpi-card-redesign tint-green">
         <div class="card-header-row">
           <span class="card-emoji">💰</span>
-          <span class="card-title">Money In</span>
+          <span class="card-title">{{ i18nStore.t('moneyIn') }}</span>
         </div>
         <div class="card-value">{{ formatCurrency(totalIncomeFiltered) }}</div>
-        <div class="card-desc">what you received</div>
+        <div class="card-desc">{{ i18nStore.t('whatYouReceived') }}</div>
       </div>
 
       <!-- Card 2: Money Out (soft red/pink tint) -->
       <div class="kpi-card-redesign tint-red">
         <div class="card-header-row">
           <span class="card-emoji">💸</span>
-          <span class="card-title">Money Out</span>
+          <span class="card-title">{{ i18nStore.t('moneyOut') }}</span>
         </div>
         <div class="card-value">{{ formatCurrency(totalExpensesFiltered) }}</div>
-        <div class="card-desc">what you spent</div>
+        <div class="card-desc">{{ i18nStore.t('whatYouSpent') }}</div>
       </div>
 
       <!-- Card 3: Left Over (soft blue tint) -->
       <div class="kpi-card-redesign tint-blue">
         <div class="card-header-row">
           <span class="card-emoji">🏦</span>
-          <span class="card-title">Left Over</span>
+          <span class="card-title">{{ i18nStore.t('leftOver') }}</span>
         </div>
         <div class="card-value">{{ formatCurrency(netBalanceFiltered) }}</div>
-        <div class="card-desc">your balance this period</div>
+        <div class="card-desc">{{ i18nStore.t('yourBalancePeriod') }}</div>
       </div>
 
       <!-- Card 4: Saved (soft purple tint) -->
       <div class="kpi-card-redesign tint-purple">
         <div class="card-header-row">
           <span class="card-emoji">📊</span>
-          <span class="card-title">Saved</span>
+          <span class="card-title">{{ i18nStore.t('saved') }}</span>
         </div>
         <div class="card-value">{{ Math.max(0, savingsRate).toFixed(0) }}%</div>
-        <div class="card-desc">of your income was saved</div>
+        <div class="card-desc">{{ i18nStore.t('ofIncomeSaved') }}</div>
       </div>
     </div>
 
@@ -152,19 +165,62 @@
       <span class="banner-text">{{ healthBannerText }}</span>
     </div>
 
+    <!-- ── 1. INSTALLMENT DASHBOARD SUMMARY CARDS ── -->
+    <div class="installment-summary-grid">
+      <!-- Card 1: Total Active Installments -->
+      <div class="inst-card tint-indigo">
+        <div class="inst-card-header">
+          <span class="inst-card-emoji">📋</span>
+          <span class="inst-card-title">{{ i18nStore.t('totalActiveInstallments') }}</span>
+        </div>
+        <div class="inst-card-value">{{ installmentDashboardStats.activeCount }}</div>
+        <div class="inst-card-desc">{{ i18nStore.t('activeInstallmentsDesc') }}</div>
+      </div>
+
+      <!-- Card 2: Monthly Installments Due -->
+      <div class="inst-card tint-amber">
+        <div class="inst-card-header">
+          <span class="inst-card-emoji">📅</span>
+          <span class="inst-card-title">{{ i18nStore.t('monthlyInstallmentsDue') }}</span>
+        </div>
+        <div class="inst-card-value">{{ formatCurrency(installmentDashboardStats.monthlyDueSum) }}</div>
+        <div class="inst-card-desc">{{ i18nStore.t('monthlyDueDesc') }}</div>
+      </div>
+
+      <!-- Card 3: Total Remaining Balance -->
+      <div class="inst-card tint-rose">
+        <div class="inst-card-header">
+          <span class="inst-card-emoji">💸</span>
+          <span class="inst-card-title">{{ i18nStore.t('totalRemainingBalance') }}</span>
+        </div>
+        <div class="inst-card-value">{{ formatCurrency(installmentDashboardStats.totalRemainingBalance) }}</div>
+        <div class="inst-card-desc">{{ i18nStore.t('remainingBalanceDesc') }}</div>
+      </div>
+
+      <!-- Card 4: Upcoming Payments This Month -->
+      <div class="inst-card tint-purple">
+        <div class="inst-card-header">
+          <span class="inst-card-emoji">⏰</span>
+          <span class="inst-card-title">{{ i18nStore.t('upcomingPaymentsThisMonth') }}</span>
+        </div>
+        <div class="inst-card-value">{{ installmentDashboardStats.upcomingCount }}</div>
+        <div class="inst-card-desc">{{ i18nStore.t('upcomingPaymentsDesc') }}</div>
+      </div>
+    </div>
+
     <!-- ── 2C. CHARTS SECTION ── -->
     <div class="dashboard-charts-layout">
       <!-- Chart 1: Donut -->
       <div class="chart-card-redesign">
         <div class="chart-card-header">
-          <h3 class="chart-title">Where did your money go? 💸</h3>
-          <p class="chart-subtitle">Your spending split by category</p>
+          <h3 class="chart-title">{{ i18nStore.t('whereMoneyGo') }}</h3>
+          <p class="chart-subtitle">{{ i18nStore.t('spendingSplit') }}</p>
         </div>
         <div class="chart-container-inner">
           <Doughnut v-if="hasFilteredExpenses" :data="expenseCategoryChartData" :options="pieOptions" />
           <div v-else class="chart-empty-state">
             <i class="pi pi-chart-pie"></i>
-            <span>No spending recorded yet 🎉</span>
+            <span>{{ i18nStore.t('noSpendingRecorded') }}</span>
           </div>
         </div>
       </div>
@@ -172,14 +228,14 @@
       <!-- Chart 2: Grouped Bar -->
       <div class="chart-card-redesign">
         <div class="chart-card-header">
-          <h3 class="chart-title">Income vs Spending 📊</h3>
-          <p class="chart-subtitle">Month by month comparison</p>
+          <h3 class="chart-title">{{ i18nStore.t('incomeVsSpending') }}</h3>
+          <p class="chart-subtitle">{{ i18nStore.t('monthMonthComparison') }}</p>
         </div>
         <div class="chart-container-inner">
           <Bar v-if="hasLast6MonthsData" :data="last6MonthsChartData" :options="barOptionsRedesign" />
           <div v-else class="chart-empty-state">
             <i class="pi pi-chart-bar"></i>
-            <span>Nothing to show yet — add income or expenses!</span>
+            <span>{{ i18nStore.t('nothingToShow') }}</span>
           </div>
         </div>
       </div>
@@ -188,8 +244,8 @@
     <!-- ── 2D. FIXED COMMITMENTS SECTION ── -->
     <div class="commitments-bottom-card">
       <div class="commitments-header">
-        <h3 class="commitments-title">Your Monthly Commitments 📋</h3>
-        <p class="commitments-subtitle">These are your regular bills and installments</p>
+        <h3 class="commitments-title">{{ i18nStore.t('monthlyCommitments') }}</h3>
+        <p class="commitments-subtitle">{{ i18nStore.t('regularBills') }}</p>
       </div>
 
       <div v-if="transactionStore.fixedCommitments.length > 0" class="commitments-content">
@@ -198,21 +254,21 @@
             <span class="commitment-item-name">
               {{ getCommitmentEmoji(item) }} {{ item.name }}
             </span>
-            <span class="commitment-item-amount">${{ item.amount.toLocaleString() }}/mo</span>
+            <span class="commitment-item-amount">${{ (item.installmentAmount || item.amount).toLocaleString() }}/mo</span>
           </li>
         </ul>
         <div class="commitments-divider-line"></div>
         <div class="commitments-total-row">
-          <span>Total this month:</span>
+          <span>{{ i18nStore.t('totalThisMonth') }}</span>
           <strong>${{ totalCommitmentsAmount.toLocaleString() }}</strong>
         </div>
       </div>
       <div v-else class="commitments-empty-msg">
-        No commitments added yet. Add them in Fixed Money!
+        {{ i18nStore.t('noCommitmentsYet') }}
       </div>
 
       <div class="commitments-action-link">
-        <router-link to="/fixed-money" class="commitments-link">Manage commitments →</router-link>
+        <router-link to="/fixed-money" class="commitments-link">{{ i18nStore.t('manageCommitments') }}</router-link>
       </div>
     </div>
 
@@ -222,8 +278,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useTransactionStore } from '../stores/Transaction';
+import { useTransactionStore, getInstallmentStats } from '../stores/Transaction';
 import { useUserStore } from '../stores/user';
+import { useI18nStore } from '../stores/i18n';
 import { Bar, Doughnut } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -248,6 +305,7 @@ ChartJS.register(
 
 const transactionStore = useTransactionStore();
 const userStore = useUserStore();
+const i18nStore = useI18nStore();
 const toast = useToast();
 
 const formatCurrency = (v) =>
@@ -446,27 +504,19 @@ const filteredIncomes = computed(() => {
   });
 });
 
-const monthsCount = computed(() => {
-  if (!filterFromDate.value || !filterToDate.value) return 1;
-  const start = filterFromDate.value;
-  const end = filterToDate.value;
-  const sYear = start.getFullYear();
-  const sMonth = start.getMonth();
-  const eYear = end.getFullYear();
-  const eMonth = end.getMonth();
-  const diff = (eYear - sYear) * 12 + (eMonth - sMonth) + 1;
-  return diff <= 0 ? 1 : diff;
+// ── Dynamic Audit: Dynamic Salary calculations ──
+const salaryFiltered = computed(() => {
+  return filteredIncomes.value
+    .filter(i => i.source === 'Salary')
+    .reduce((sum, i) => sum + Number(i.amount || 0), 0);
 });
 
-// ── Filtered Summary Metrics ──
 const totalExpensesFiltered = computed(() => {
   return filteredTransactions.value.reduce((acc, t) => acc + Number(t.Transcation || 0), 0);
 });
 
 const totalIncomeFiltered = computed(() => {
-  const extraIncome = filteredIncomes.value.reduce((acc, i) => acc + Number(i.amount || 0), 0);
-  const baseSalaryContribution = Number(transactionStore.salary || 0) * monthsCount.value;
-  return extraIncome + baseSalaryContribution;
+  return filteredIncomes.value.reduce((acc, i) => acc + Number(i.amount || 0), 0);
 });
 
 const netBalanceFiltered = computed(() => {
@@ -476,6 +526,79 @@ const netBalanceFiltered = computed(() => {
 const savingsRate = computed(() => {
   if (totalIncomeFiltered.value <= 0) return 0;
   return (netBalanceFiltered.value / totalIncomeFiltered.value) * 100;
+});
+
+// ── Warning Alerts Banner scanning active installments ──
+const dashboardAlerts = computed(() => {
+  const list = [];
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  
+  transactionStore.fixedCommitments.forEach(c => {
+    if (c.status !== 'Active') return;
+    
+    const stats = getInstallmentStats(c, transactionStore.installmentPayments);
+    const dueDateStr = stats.nextPaymentDate;
+    if (!dueDateStr) return;
+    
+    const dueDate = new Date(dueDateStr);
+    dueDate.setHours(0,0,0,0);
+    const diffTime = dueDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays >= 0 && diffDays <= 7) {
+      const dayText = diffDays === 0 ? (i18nStore.locale === 'ar' ? 'اليوم' : 'today') : 
+                      (diffDays === 1 ? (i18nStore.locale === 'ar' ? 'غداً' : 'tomorrow') : 
+                      (i18nStore.locale === 'ar' ? `خلال ${diffDays} أيام` : `in ${diffDays} days`));
+      list.push({
+        id: `alert-${c.id}`,
+        type: 'warning',
+        text: i18nStore.t('paymentDueAlert', { name: c.name, dayText })
+      });
+    } else if (diffDays < 0) {
+      const overdueDays = Math.abs(diffDays);
+      list.push({
+        id: `alert-${c.id}`,
+        type: 'danger',
+        text: i18nStore.t('paymentOverdueAlert', { name: c.name, days: overdueDays })
+      });
+    }
+  });
+  
+  return list;
+});
+
+// ── Installment summary cards stats ──
+const installmentDashboardStats = computed(() => {
+  let activeCount = 0;
+  let monthlyDueSum = 0;
+  let totalRemainingBalance = 0;
+  
+  const currentMonthStr = new Date().toISOString().substring(0, 7); // YYYY-MM
+  
+  transactionStore.fixedCommitments.forEach(c => {
+    if (c.status !== 'Active') return;
+    activeCount++;
+    
+    const instAmt = Number(c.installmentAmount || c.amount || 0);
+    monthlyDueSum += instAmt;
+    
+    const stats = getInstallmentStats(c, transactionStore.installmentPayments);
+    totalRemainingBalance += stats.remainingBalance;
+  });
+  
+  const upcomingCount = transactionStore.fixedCommitments.filter(c => {
+    if (c.status !== 'Active') return false;
+    const stats = getInstallmentStats(c, transactionStore.installmentPayments);
+    return stats.nextPaymentDate && stats.nextPaymentDate.substring(0, 7) === currentMonthStr;
+  }).length;
+
+  return {
+    activeCount,
+    monthlyDueSum,
+    totalRemainingBalance,
+    upcomingCount
+  };
 });
 
 // ── Chart Configurations ──
@@ -492,8 +615,8 @@ const getCommitmentEmoji = (item) => {
 
 const totalCommitmentsAmount = computed(() => {
   return transactionStore.fixedCommitments
-    .filter(c => c.isActive)
-    .reduce((sum, c) => sum + Number(c.amount || 0), 0);
+    .filter(c => c.status === 'Active')
+    .reduce((sum, c) => sum + Number(c.installmentAmount || c.amount || 0), 0);
 });
 
 // Friendly date range text for subtext display
@@ -540,11 +663,11 @@ const healthBannerEmoji = computed(() => {
 });
 
 const healthBannerText = computed(() => {
-  if (totalIncomeFiltered.value <= 0) return 'Add your income to start tracking!';
+  if (totalIncomeFiltered.value <= 0) return i18nStore.t('addIncomeStart');
   const rate = savingsRate.value;
-  if (rate >= 20) return "Great job! You're saving well this month!";
-  if (rate >= 5) return "Not bad! Try to cut a little spending.";
-  return "Heads up! You spent most of your income.";
+  if (rate >= 20) return i18nStore.t('savingWell');
+  if (rate >= 5) return i18nStore.t('cutSpending');
+  return i18nStore.t('spentMost');
 });
 
 const healthBannerClass = computed(() => {
@@ -610,7 +733,6 @@ const expenseCategoryChartData = computed(() => {
 const last6Months = computed(() => {
   const list = [];
   const now = new Date();
-  // We want reverse chronological order (Jun, May...)
   for (let i = 0; i < 6; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     list.push(d);
@@ -629,16 +751,15 @@ const last6MonthsGroupedData = computed(() => {
     const year = d.getFullYear();
     const monthStr = String(d.getMonth() + 1).padStart(2, '0');
     
-    const salaryVal = Number(transactionStore.salary || 0);
-    
-    const extraIncomeVal = transactionStore.incomes
+    // Sum incomes in this month
+    const incomeVal = transactionStore.incomes
       .filter(i => {
         const parsed = parseDate(i.date);
         return parsed && parsed.getFullYear() === year && String(parsed.getMonth() + 1).padStart(2, '0') === monthStr;
       })
       .reduce((sum, i) => sum + Number(i.amount || 0), 0);
       
-    incomesData.push(salaryVal + extraIncomeVal);
+    incomesData.push(incomeVal);
     
     const expensesVal = transactionStore.transactions
       .filter(t => {
@@ -670,7 +791,7 @@ const last6MonthsChartData = computed(() => {
     labels: data.labels,
     datasets: [
       {
-        label: 'Income',
+        label: i18nStore.locale === 'ar' ? 'الدخل' : 'Income',
         data: data.incomesData,
         backgroundColor: 'rgba(16, 185, 129, 0.75)',
         borderColor: '#10b981',
@@ -678,7 +799,7 @@ const last6MonthsChartData = computed(() => {
         borderRadius: 5
       },
       {
-        label: 'Spending',
+        label: i18nStore.locale === 'ar' ? 'الإنفاق' : 'Spending',
         data: data.expensesData,
         backgroundColor: 'rgba(244, 63, 94, 0.75)',
         borderColor: '#f43f5e',
@@ -769,7 +890,7 @@ const barOptionsRedesign = {
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #f1f5f9;
+  color: #f8fafc;
 }
 .greeting-subtitle {
   font-size: 0.95rem;
@@ -788,6 +909,37 @@ const barOptionsRedesign = {
   font-size: 0.8125rem;
   color: #cbd5e1;
   font-weight: 500;
+}
+
+/* Warning Alerts Banner */
+.dashboard-alerts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.alert-warning-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.alert-warning {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: #fbbf24;
+}
+
+.alert-danger {
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #f43f5e;
 }
 
 /* ── Date filter container ── */
@@ -1066,6 +1218,76 @@ const barOptionsRedesign = {
   color: #cbd5e1;
 }
 
+/* ── Installment summary dashboard grid ── */
+.installment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.inst-card {
+  background: rgba(30, 41, 59, 0.4);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.inst-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inst-card-emoji {
+  font-size: 1.15rem;
+}
+
+.inst-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #cbd5e1;
+  letter-spacing: 0.05em;
+}
+
+.inst-card-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inst-card-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.tint-indigo {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.tint-amber {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.tint-rose {
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
 /* ── Charts section ── */
 .dashboard-charts-layout {
   display: flex;
@@ -1214,6 +1436,10 @@ const barOptionsRedesign = {
   }
   
   .simplified-kpis-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .installment-summary-grid {
     grid-template-columns: repeat(4, 1fr);
   }
   

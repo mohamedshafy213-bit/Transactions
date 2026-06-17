@@ -32,14 +32,19 @@ const router = createRouter({
     history: createWebHistory(),
     routes,
 })
-router.beforeEach((to, from, next) => {
-const userStore = useUserStore()
-if(to.name !== 'login' && !userStore.isLoggedIn) {
-    next({ name: 'login' })
-}
-else if(to.name==='login' && userStore.isLoggedIn){
-    next({name:'dashboard'})}
-    else{next()}
-
+router.beforeEach((to, from) => {
+  const userStore = useUserStore()
+  console.log('[Router] Navigating to:', to.path, 'Name:', to.name, 'LoggedIn:', userStore.isLoggedIn)
+  
+  if (to.name !== 'login' && !userStore.isLoggedIn) {
+    console.log('[Router] Redirecting to login')
+    return { name: 'login' }
+  }
+  if (to.name === 'login' && userStore.isLoggedIn) {
+    console.log('[Router] Redirecting to dashboard')
+    return { name: 'dashboard' }
+  }
+  console.log('[Router] Resolving route transition')
 })
+
 export default router;
