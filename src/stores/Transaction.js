@@ -79,6 +79,8 @@ export const useTransactionStore = defineStore("transaction", {
     const storedFixedCommitments = localStorage.getItem("fixedCommitments");
     const storedInstallmentPayments = localStorage.getItem("installmentPayments");
     const storedNotifications = localStorage.getItem("notifications");
+    const storedHistory = localStorage.getItem("history");
+    const storedIsMonthStarted = localStorage.getItem("isMonthStarted");
     
     return {
       transactions: storedTransactions ? JSON.parse(storedTransactions) : [],
@@ -87,6 +89,8 @@ export const useTransactionStore = defineStore("transaction", {
       fixedCommitments: storedFixedCommitments ? JSON.parse(storedFixedCommitments) : [],
       installmentPayments: storedInstallmentPayments ? JSON.parse(storedInstallmentPayments) : [],
       notifications: storedNotifications ? JSON.parse(storedNotifications) : [],
+      history: storedHistory ? JSON.parse(storedHistory) : [],
+      isMonthStarted: storedIsMonthStarted ? JSON.parse(storedIsMonthStarted) : false,
       remind: 0
     };
   },
@@ -99,6 +103,8 @@ export const useTransactionStore = defineStore("transaction", {
       localStorage.setItem("fixedCommitments", JSON.stringify(this.fixedCommitments));
       localStorage.setItem("installmentPayments", JSON.stringify(this.installmentPayments));
       localStorage.setItem("notifications", JSON.stringify(this.notifications));
+      localStorage.setItem("history", JSON.stringify(this.history));
+      localStorage.setItem("isMonthStarted", JSON.stringify(this.isMonthStarted));
     },
 
     // Legacy Salary Migration: convert static base salary to dynamic Income transactions
@@ -121,7 +127,7 @@ export const useTransactionStore = defineStore("transaction", {
     AddTransaction(transactionDetails) {
       const txn = {
         id: transactionDetails.id || Math.random().toString(36).substring(2, 9),
-        date: transactionDetails.date || new Date().toLocaleDateString(),
+        date: transactionDetails.date || new Date().toISOString().split('T')[0],
         Transcation: Number(transactionDetails.Transcation || 0),
         Category: transactionDetails.Category || "",
         Reason: transactionDetails.Reason || "",
@@ -164,7 +170,7 @@ export const useTransactionStore = defineStore("transaction", {
     AddIncome(incomeDetails) {
       const income = {
         id: Math.random().toString(36).substring(2, 9),
-        date: incomeDetails.date || new Date().toLocaleDateString(),
+        date: incomeDetails.date || new Date().toISOString().split('T')[0],
         amount: Number(incomeDetails.amount || 0),
         source: incomeDetails.source || "",
         note: incomeDetails.note || ""
@@ -481,6 +487,96 @@ export const useTransactionStore = defineStore("transaction", {
           }
         }
       });
+    },
+
+    archiveCurrentMonth() {
+      const activeTransactions = JSON.parse(JSON.stringify(this.transactions));
+      const activeIncomes = JSON.parse(JSON.stringify(this.incomes));
+
+      // Calculate start and end dates
+      const dates = [...activeTransactions, ...activeIncomes]
+        .map(item => item.date)
+        .filter(Boolean)
+        .map(dStr => new Date(dStr))
+        .filter(d => !isNaN(d.getTime()));
+
+      let startDate = "";
+      let endDate = "";
+      if (dates.length > 0) {
+        const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+        startDate = minDate.toISOString().split('T')[0];
+        endDate = maxDate.toISOString().split('T')[0];
+      } else {
+        const today = new Date().toISOString().split('T')[0];
+        startDate = today;
+        endDate = today;
+      }
+
+      // Calculate top 5 spending categories
+      const categorySums = {};
+      activeTransactions.forEach(t => {
+        const cat = t.Category || 'Uncategorized';
+        const amt = Number(t.Transcation || 0);
+        categorySums[cat] = (categorySums[cat] || 0) + amt;
+      });
+      const topCategories = Object.entries(categorySums)
+        .map(([category, amount]) => ({ category, amount }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 5);
+
+      const report = {
+        id: Math.random().toString(36).substring(2, 9),
+        startDate,
+        endDate,
+        incomes: activeIncomes,
+        transactions: activeTransactions,
+        topCategories,
+        totalIncome: activeIncomes.reduce((sum, i) => sum + Number(i.amount || 0), 0),
+        totalExpenses: activeTransactions.reduce((sum, t) => sum + Number(t.Transcation || 0), 0),
+        archivedAt: new Date().toISOString()
+      };
+
+      this.history.push(report);
+      this.isMonthStarted = false;
+      this.saveToStorage();
+    },
+
+    resetCurrentMonth() {
+      this.transactions = [];
+      this.incomes = [];
+      this.isMonthStarted = false;
+      this.saveToStorage();
+      this.Setremind();
+    },
+
+    startNextMonth() {
+      let lastSalary = 0;
+      const salaryIncome = this.incomes.find(i => i.source === 'Salary');
+      if (salaryIncome) {
+        lastSalary = salaryIncome.amount;
+      } else if (this.history && this.history.length > 0) {
+        const lastReport = this.history[this.history.length - 1];
+        const prevSalaryIncome = lastReport.incomes?.find(i => i.source === 'Salary');
+        if (prevSalaryIncome) {
+          lastSalary = prevSalaryIncome.amount;
+        }
+      }
+
+      this.resetCurrentMonth();
+
+      if (lastSalary > 0) {
+        this.AddIncome({
+          amount: lastSalary,
+          source: 'Salary',
+          note: 'Monthly Salary Base',
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
+
+      this.CheckAndGenerateReminders();
+      this.isMonthStarted = true;
+      this.saveToStorage();
     }
   },
 

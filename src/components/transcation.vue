@@ -5,6 +5,18 @@
       <!-- ── View Switcher + Table ── -->
       <div class="table-panel">
 
+        <!-- Cycle Control Banner -->
+        <div class="cycle-control-bar">
+          <div class="cycle-title">
+            <i class="pi pi-sync" style="color:#8b5cf6;"></i>
+            <span>{{ i18nStore.t('salaryTracker') }} Cycle</span>
+          </div>
+          <div class="cycle-actions">
+            <Button :label="i18nStore.t('btnResetMonth')" icon="pi pi-refresh" severity="danger" size="small" outlined :disabled="!transactionStore.isMonthStarted" @click="confirmResetMonth" />
+            <Button :label="i18nStore.t('btnStartNextMonth')" icon="pi pi-step-forward" severity="success" size="small" :disabled="transactionStore.isMonthStarted" @click="confirmStartNextMonth" />
+          </div>
+        </div>
+
         <!-- Switcher -->
         <div class="switcher-bar">
           <button class="switcher-btn" :class="{ active: viewMode === 'expenses' }" @click="viewMode = 'expenses'">
@@ -21,7 +33,7 @@
         <div v-if="viewMode === 'expenses'">
           <div class="table-actions">
             <div class="action-group">
-              <Button :label="i18nStore.t('btnNew')" icon="pi pi-plus" size="small" @click="openNew" />
+              <Button :label="i18nStore.t('btnNew')" icon="pi pi-plus" size="small" :disabled="!transactionStore.isMonthStarted" @click="openNew" />
             </div>
             <div class="action-group">
               <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV" />
@@ -29,10 +41,11 @@
           </div>
 
           <!-- Desktop table -->
-          <DataTable ref="dt" :value="expensesList"
-                     dataKey="id" :paginator="true" :rows="8" :filters="filters"
-                     paginatorTemplate="PrevPageLink PageLinks NextPageLink"
-                     class="modern-table desktop-table">
+          <div class="w-full overflow-x-auto">
+            <DataTable ref="dt" :value="expensesList"
+                       dataKey="id" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 15, 20]" :filters="filters"
+                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                       class="modern-table desktop-table">
             <template #header>
               <div class="table-header" style="flex-wrap: wrap; gap: 0.75rem;">
                 <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap: wrap;">
@@ -77,7 +90,8 @@
                 </div>
               </template>
             </Column>
-          </DataTable>
+            </DataTable>
+          </div>
 
           <!-- Mobile cards -->
           <div class="mobile-list">
@@ -117,7 +131,7 @@
         <div v-if="viewMode === 'incomes'">
           <div class="table-actions">
             <div class="action-group">
-              <Button :label="i18nStore.t('addIncome')" icon="pi pi-plus" size="small" class="add-income-btn" @click="openIncomeDialog" />
+              <Button :label="i18nStore.t('addIncome')" icon="pi pi-plus" size="small" class="add-income-btn" :disabled="!transactionStore.isMonthStarted" @click="openIncomeDialog" />
             </div>
             <div class="action-group">
               <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
@@ -125,9 +139,10 @@
           </div>
 
           <!-- Desktop table -->
-          <DataTable ref="dtIncomes" :value="transactionStore.incomes" dataKey="id" :paginator="true" :rows="8"
-                     paginatorTemplate="PrevPageLink PageLinks NextPageLink"
-                     class="modern-table desktop-table">
+          <div class="w-full overflow-x-auto">
+            <DataTable ref="dtIncomes" :value="transactionStore.incomes" dataKey="id" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 15, 20]"
+                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                       class="modern-table desktop-table">
             <template #header>
               <div class="table-header">
                 <span class="table-title">{{ i18nStore.t('incomes') }}</span>
@@ -154,7 +169,8 @@
                 </div>
               </template>
             </Column>
-          </DataTable>
+            </DataTable>
+          </div>
 
           <!-- Mobile cards -->
           <div class="mobile-list">
@@ -163,7 +179,7 @@
               <span class="income-total-badge">{{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
             </div>
             <div class="mobile-actions-row" style="padding: 0.5rem 0.875rem; display: flex; gap: 0.5rem;">
-              <Button :label="i18nStore.t('addIncome')" icon="pi pi-plus" size="small" class="add-income-btn" style="width: 100%;" @click="openIncomeDialog" />
+              <Button :label="i18nStore.t('addIncome')" icon="pi pi-plus" size="small" class="add-income-btn" style="width: 100%;" :disabled="!transactionStore.isMonthStarted" @click="openIncomeDialog" />
               <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
             </div>
             <div v-if="transactionStore.incomes.length === 0" class="mobile-empty">{{ i18nStore.t('historyEmpty') }}</div>
@@ -241,6 +257,30 @@
       </template>
     </Dialog>
 
+    <!-- Reset Month Confirmation -->
+    <Dialog v-model:visible="resetMonthDialog" :style="{ width: '92vw', maxWidth: '440px' }" :header="i18nStore.t('resetMonthHeader')" :modal="true">
+      <div class="confirm-body">
+        <div class="confirm-icon"><i class="pi pi-exclamation-triangle"></i></div>
+        <p>{{ i18nStore.t('resetMonthConfirm') }}</p>
+      </div>
+      <template #footer>
+        <Button :label="i18nStore.t('btnCancel')" text @click="resetMonthDialog = false" severity="secondary" />
+        <Button :label="i18nStore.t('btnResetMonth')" icon="pi pi-refresh" @click="handleResetMonth" severity="danger" />
+      </template>
+    </Dialog>
+
+    <!-- Start Next Month Confirmation -->
+    <Dialog v-model:visible="startNextMonthDialog" :style="{ width: '92vw', maxWidth: '440px' }" :header="i18nStore.t('startNextMonthHeader')" :modal="true">
+      <div class="confirm-body">
+        <div class="confirm-icon"><i class="pi pi-question-circle"></i></div>
+        <p>{{ i18nStore.t('startNextMonthConfirm') }}</p>
+      </div>
+      <template #footer>
+        <Button :label="i18nStore.t('btnCancel')" text @click="startNextMonthDialog = false" severity="secondary" />
+        <Button :label="i18nStore.t('btnStartNextMonth')" icon="pi pi-step-forward" @click="handleStartNextMonth" severity="success" />
+      </template>
+    </Dialog>
+
     <!-- Add Income Dialog -->
     <Dialog v-model:visible="incomeDialog" :style="{ width: '92vw', maxWidth: '440px' }" :header="newIncome.id ? i18nStore.t('editIncome') : i18nStore.t('addIncome')" :modal="true" class="p-fluid">
       <div class="dialog-body">
@@ -282,6 +322,40 @@ const userStore = useUserStore();
 const i18nStore = useI18nStore();
 const router = useRouter();
 const toast = useToast();
+
+const resetMonthDialog = ref(false);
+const startNextMonthDialog = ref(false);
+
+const confirmResetMonth = () => {
+  resetMonthDialog.value = true;
+};
+
+const handleResetMonth = () => {
+  transactionStore.archiveCurrentMonth();
+  transactionStore.resetCurrentMonth();
+  resetMonthDialog.value = false;
+  toast.add({ 
+    severity: 'success', 
+    summary: i18nStore.t('toastSuccess'), 
+    detail: i18nStore.t('toastArchived'), 
+    life: 3000 
+  });
+};
+
+const confirmStartNextMonth = () => {
+  startNextMonthDialog.value = true;
+};
+
+const handleStartNextMonth = () => {
+  transactionStore.startNextMonth();
+  startNextMonthDialog.value = false;
+  toast.add({ 
+    severity: 'success', 
+    summary: i18nStore.t('toastSuccess'), 
+    detail: i18nStore.t('toastNextMonthStarted'), 
+    life: 3000 
+  });
+};
 
 onMounted(() => { 
   transactionStore.Setremind(); 
@@ -786,4 +860,28 @@ const exportIncomesCSV = () => dtIncomes.value.exportCSV();
   display: flex; align-items: center; gap: 0.25rem;
 }
 .mc-date .pi { font-size: 0.7rem; }
+
+/* ── Cycle Control Banner ── */
+.cycle-control-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: rgba(30, 41, 59, 0.45);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.cycle-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+.cycle-actions {
+  display: flex;
+  gap: 0.75rem;
+}
 </style>

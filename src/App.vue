@@ -124,6 +124,22 @@ onMounted(() => {
           <i class="pi pi-credit-card"></i>
           <span>{{ i18nStore.t('fixedMoney') }}</span>
         </button>
+        <button 
+          class="nav-item" 
+          :class="{ active: route.path === '/history' }" 
+          @click="navigateTo('/history')"
+        >
+          <i class="pi pi-history"></i>
+          <span>{{ i18nStore.t('history') }}</span>
+        </button>
+        <button 
+          class="nav-item" 
+          :class="{ active: route.path === '/check-calculator' }" 
+          @click="navigateTo('/check-calculator')"
+        >
+          <i class="pi pi-calculator"></i>
+          <span>{{ i18nStore.t('checkCalculator') }}</span>
+        </button>
       </nav>
       
       <div class="sidebar-footer">
@@ -252,6 +268,22 @@ onMounted(() => {
         >
           <i class="pi pi-credit-card"></i>
           <span>{{ i18nStore.t('fixedMoney') }}</span>
+        </button>
+        <button 
+          class="nav-item" 
+          :class="{ active: route.path === '/history' }" 
+          @click="navigateTo('/history')"
+        >
+          <i class="pi pi-history"></i>
+          <span>{{ i18nStore.t('history') }}</span>
+        </button>
+        <button 
+          class="nav-item" 
+          :class="{ active: route.path === '/check-calculator' }" 
+          @click="navigateTo('/check-calculator')"
+        >
+          <i class="pi pi-calculator"></i>
+          <span>{{ i18nStore.t('checkCalculator') }}</span>
         </button>
       </nav>
       

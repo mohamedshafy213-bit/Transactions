@@ -461,25 +461,65 @@ onMounted(() => {
 // ── Date Parser Helper ──
 const parseDate = (dateStr) => {
   if (!dateStr) return null;
-  if (dateStr.includes('-')) {
-    const parts = dateStr.split('-');
-    if (parts.length >= 3) {
-      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-    } else if (parts.length === 2) {
-      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+  const cleanStr = String(dateStr).trim();
+  
+  let isDayFirst = true;
+  try {
+    const testDate = new Date(2026, 11, 25);
+    const testStr = testDate.toLocaleDateString();
+    const testParts = testStr.split(/[-/]/);
+    if (testParts.length === 3) {
+      const first = parseInt(testParts[0], 10);
+      const second = parseInt(testParts[1], 10);
+      if (first === 25) {
+        isDayFirst = true;
+      } else if (second === 25) {
+        isDayFirst = false;
+      }
     }
+  } catch (e) {
+    isDayFirst = true;
   }
-  if (dateStr.includes('/')) {
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      if (parts[0].length === 4) {
-        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      } else if (parts[2].length === 4) {
-        return new Date(parseInt(parts[2], 10), parseInt(parts[0], 10) - 1, parseInt(parts[1], 10));
+
+  if (cleanStr.includes('-')) {
+    const parts = cleanStr.split('-');
+    if (parts.length >= 3) {
+      const p0 = parseInt(parts[0], 10);
+      const p1 = parseInt(parts[1], 10);
+      const p2 = parseInt(parts[2], 10);
+      if (p0 > 1000) {
+        return new Date(p0, p1 - 1, p2);
+      } else if (p2 > 1000) {
+        if (p0 > 12) return new Date(p2, p1 - 1, p0);
+        if (p1 > 12) return new Date(p2, p0 - 1, p1);
+        return isDayFirst ? new Date(p2, p1 - 1, p0) : new Date(p2, p0 - 1, p1);
+      }
+    } else if (parts.length === 2) {
+      const p0 = parseInt(parts[0], 10);
+      const p1 = parseInt(parts[1], 10);
+      if (p0 > 1000) {
+        return new Date(p0, p1 - 1, 1);
       }
     }
   }
-  const d = new Date(dateStr);
+
+  if (cleanStr.includes('/')) {
+    const parts = cleanStr.split('/');
+    if (parts.length === 3) {
+      const p0 = parseInt(parts[0], 10);
+      const p1 = parseInt(parts[1], 10);
+      const p2 = parseInt(parts[2], 10);
+      if (p0 > 1000) {
+        return new Date(p0, p1 - 1, p2);
+      } else if (p2 > 1000) {
+        if (p0 > 12) return new Date(p2, p1 - 1, p0);
+        if (p1 > 12) return new Date(p2, p0 - 1, p1);
+        return isDayFirst ? new Date(p2, p1 - 1, p0) : new Date(p2, p0 - 1, p1);
+      }
+    }
+  }
+
+  const d = new Date(cleanStr);
   if (!isNaN(d.getTime())) {
     d.setHours(0, 0, 0, 0);
     return d;

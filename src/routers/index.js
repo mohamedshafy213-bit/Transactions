@@ -5,6 +5,8 @@ import {useUserStore} from '../stores/user'
 import transcation from '../components/transcation.vue'
 import Dashboard from '../components/Dashboard.vue'
 import FixedMoney from '../components/FixedMoney.vue'
+import History from '../components/History.vue'
+import CheckCalculator from '../components/CheckCalculator.vue'
 
 const routes=[
     {
@@ -26,6 +28,16 @@ const routes=[
         path:'/fixed-money',
         name:'fixed-money',
         component:FixedMoney
+    },
+    {
+        path:'/history',
+        name:'history',
+        component:History
+    },
+    {
+        path:'/check-calculator',
+        name:'check-calculator',
+        component:CheckCalculator
     }
 ]
 const router = createRouter({
