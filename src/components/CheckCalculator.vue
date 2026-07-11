@@ -837,10 +837,12 @@ import { ref, computed, onBeforeUnmount } from 'vue';
 import { useCheckStore } from '../stores/CheckStore';
 import { useI18nStore } from '../stores/i18n';
 import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
 
 const store = useCheckStore();
 const i18nStore = useI18nStore();
 const toast = useToast();
+const router = useRouter();
 
 const currentTab = ref('active');
 const selectedCheck = ref(null);
@@ -1117,6 +1119,7 @@ const itemForm = ref({ itemName: '', price: null, quantity: 1 });
 const paymentMethodOptions = [
   { label: 'Cash', value: 'Cash' },
   { label: 'InstaPay', value: 'InstaPay' },
+  { label: 'Vodafone Cash', value: 'Vodafone Cash' },
   { label: 'Credit Card', value: 'Credit Card' },
   { label: 'Visa', value: 'Visa' },
   { label: 'Other', value: 'Other' }
@@ -1126,6 +1129,7 @@ const getPaymentIcon = (method) => {
   switch (method) {
     case 'Cash': return 'pi pi-money-bill';
     case 'InstaPay': return 'pi pi-bolt';
+    case 'Vodafone Cash': return 'pi pi-mobile';
     case 'Credit Card': return 'pi pi-credit-card';
     case 'Visa': return 'pi pi-credit-card';
     default: return 'pi pi-ellipsis-h';
@@ -1186,15 +1190,30 @@ const saveParticipantOrders = () => {
       itemForm.value = { itemName: '', price: null, quantity: 1 };
     }
 
+    const pName = selectedCheck.value.participants.find(p => p.id === selectedParticipantId.value)?.name || '';
+    const pTotal = calculatedOrdersTotal.value;
+    const pMethod = orderPaymentMethod.value;
+
     store.updateParticipantOrders(
       selectedCheck.value.id,
       selectedParticipantId.value,
       orderItemsList.value,
-      orderPaymentMethod.value
+      pMethod
     );
     ordersDialogVisible.value = false;
     selectedCheck.value = store.checks.find(c => c.id === selectedCheck.value.id);
     toast.add({ severity: 'success', summary: 'Orders Saved', detail: 'Participant order details updated.', life: 3000 });
+
+    if (pMethod === 'InstaPay' || pMethod === 'Vodafone Cash') {
+      router.push({
+        path: '/payment-dispatcher',
+        query: {
+          name: pName,
+          amount: pTotal.toFixed(2),
+          method: pMethod
+        }
+      });
+    }
   }
 };
 

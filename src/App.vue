@@ -140,6 +140,14 @@ onMounted(() => {
           <i class="pi pi-calculator"></i>
           <span>{{ i18nStore.t('checkCalculator') }}</span>
         </button>
+        <button 
+          class="nav-item" 
+          :class="{ active: route.path === '/payment-dispatcher' }" 
+          @click="navigateTo('/payment-dispatcher')"
+        >
+          <i class="pi pi-send"></i>
+          <span>{{ i18nStore.t('paymentDispatcher') }}</span>
+        </button>
       </nav>
       
       <div class="sidebar-footer">
@@ -284,6 +292,14 @@ onMounted(() => {
         >
           <i class="pi pi-calculator"></i>
           <span>{{ i18nStore.t('checkCalculator') }}</span>
+        </button>
+        <button 
+          class="nav-item" 
+          :class="{ active: route.path === '/payment-dispatcher' }" 
+          @click="navigateTo('/payment-dispatcher')"
+        >
+          <i class="pi pi-send"></i>
+          <span>{{ i18nStore.t('paymentDispatcher') }}</span>
         </button>
       </nav>
       
