@@ -33,7 +33,7 @@
         <div v-if="viewMode === 'expenses'">
           <div class="table-actions">
             <div class="action-group">
-              <Button :label="i18nStore.t('btnNew')" icon="pi pi-plus" size="small" :disabled="!transactionStore.isMonthStarted" @click="openNew" />
+              <Button :label="i18nStore.t('btnNew')" icon="pi pi-plus" size="small"  @click="openNew" />
             </div>
             <div class="action-group">
               <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportCSV" />
