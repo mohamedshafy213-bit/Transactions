@@ -42,21 +42,14 @@
 
           <!-- Desktop table -->
           <div class="w-full overflow-x-auto">
-            <DataTable ref="dt" :value="expensesList"
-                       dataKey="id" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 15, 20]" :filters="filters"
+            <DataTable ref="dt" :value="transactionStore.transactions"
+                       dataKey="id" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 15, 20]"
                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                        class="modern-table desktop-table">
             <template #header>
-              <div class="table-header" style="flex-wrap: wrap; gap: 0.75rem;">
-                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap: wrap;">
-                  <span class="table-title">{{ i18nStore.t('expenses') }}</span>
-                  <span class="expense-total-badge">{{ i18nStore.t('expenseTotal') }} {{ formatCurrency(transactionStore.totalExpenses) }}</span>
-                  <Select v-model="selectedTypeFilter" :options="typeFilterOptions" :placeholder="i18nStore.t('filterType')" style="width: 140px; margin-left: 0.5rem;" />
-                </div>
-                <IconField class="search-field">
-                  <InputIcon><i class="pi pi-search" /></InputIcon>
-                  <InputText v-model="filters['global'].value" :placeholder="i18nStore.t('searchPlaceholder')" />
-                </IconField>
+              <div class="table-header">
+                <span class="table-title">{{ i18nStore.t('expenses') }}</span>
+                <span class="expense-total-badge">{{ i18nStore.t('expenseTotal') }} {{ formatCurrency(transactionStore.totalExpenses) }}</span>
               </div>
             </template>
             <Column field="date" header="Date" sortable style="min-width:7rem"></Column>
@@ -65,13 +58,7 @@
                 <span class="amount-out">{{ formatCurrency(data.Transcation) }}</span>
               </template>
             </Column>
-            <Column field="Type" :header="i18nStore.t('type')" sortable style="min-width:8rem">
-              <template #body="{ data }">
-                <span class="type-badge" :class="'badge--' + (data.Type || 'Variable').toLowerCase().replace(' ', '')">
-                  {{ i18nStore.t('type' + (data.Type || 'Variable')) }}
-                </span>
-              </template>
-            </Column>
+
             <Column field="Category" :header="i18nStore.t('category')" sortable style="min-width:9rem">
               <template #body="{ data }">
                 <span class="category-chip">{{ data.Category || '—' }}</span>
@@ -95,24 +82,14 @@
 
           <!-- Mobile cards -->
           <div class="mobile-list">
-            <div class="table-header" style="padding:0.875rem 0.875rem 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div class="table-header" style="padding:0.875rem 0.875rem 0; display: flex; justify-content: space-between; align-items: center;">
               <span class="table-title">{{ i18nStore.t('expenses') }}</span>
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="expense-total-badge">{{ formatCurrency(transactionStore.totalExpenses) }}</span>
-                <Select v-model="selectedTypeFilter" :options="typeFilterOptions" :placeholder="i18nStore.t('filterType')" style="width: 120px;" />
-              </div>
+              <span class="expense-total-badge">{{ formatCurrency(transactionStore.totalExpenses) }}</span>
             </div>
-            <div class="mobile-search">
-              <i class="pi pi-search"></i>
-              <input v-model="mobileSearch" :placeholder="i18nStore.t('searchExpensesPlaceholder')" class="mobile-search-input" />
-            </div>
-            <div v-if="filteredExpenses.length === 0" class="mobile-empty">{{ i18nStore.t('noSpendingRecorded') }}</div>
-            <div v-for="item in filteredExpenses" :key="item.id" class="mobile-card">
+            <div v-if="transactionStore.transactions.length === 0" class="mobile-empty">{{ i18nStore.t('noSpendingRecorded') }}</div>
+            <div v-for="item in paginatedMobileExpenses" :key="item.id" class="mobile-card">
               <div class="mc-top">
                 <span class="mc-amount amount-out">{{ formatCurrency(item.Transcation) }}</span>
-                <span class="type-badge" :class="'badge--' + (item.Type || 'Variable').toLowerCase().replace(' ', '')">
-                  {{ i18nStore.t('type' + (item.Type || 'Variable')) }}
-                </span>
                 <span class="category-chip">{{ item.Category || '—' }}</span>
               </div>
               <div class="mc-reason">{{ item.Reason || '—' }}</div>
@@ -124,6 +101,15 @@
                 </div>
               </div>
             </div>
+            <Paginator 
+              v-if="transactionStore.transactions.length > expensesRows"
+              :rows="expensesRows" 
+              :totalRecords="transactionStore.transactions.length" 
+              template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+              @page="onExpensesPageChange"
+              :first="expensesPage * expensesRows"
+              class="mobile-paginator"
+            />
           </div>
         </div>
 
@@ -178,12 +164,8 @@
               <span class="table-title">{{ i18nStore.t('incomes') }}</span>
               <span class="income-total-badge">{{ formatCurrency(transactionStore.totalExtraIncome) }}</span>
             </div>
-            <div class="mobile-actions-row" style="padding: 0.5rem 0.875rem; display: flex; gap: 0.5rem;">
-              <Button :label="i18nStore.t('addIncome')" icon="pi pi-plus" size="small" class="add-income-btn" style="width: 100%;" :disabled="!transactionStore.isMonthStarted" @click="openIncomeDialog" />
-              <Button :label="i18nStore.t('btnExport')" icon="pi pi-upload" severity="secondary" size="small" @click="exportIncomesCSV" />
-            </div>
             <div v-if="transactionStore.incomes.length === 0" class="mobile-empty">{{ i18nStore.t('historyEmpty') }}</div>
-            <div v-for="item in transactionStore.incomes" :key="item.id" class="mobile-card mobile-card--income">
+            <div v-for="item in paginatedMobileIncomes" :key="item.id" class="mobile-card mobile-card--income">
               <div class="mc-top">
                 <span class="mc-amount amount-in">+{{ formatCurrency(item.amount) }}</span>
                 <span class="mc-source">{{ item.source }}</span>
@@ -197,6 +179,15 @@
                 </div>
               </div>
             </div>
+            <Paginator 
+              v-if="transactionStore.incomes.length > incomesRows"
+              :rows="incomesRows" 
+              :totalRecords="transactionStore.incomes.length" 
+              template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+              @page="onIncomesPageChange"
+              :first="incomesPage * incomesRows"
+              class="mobile-paginator"
+            />
           </div>
         </div>
       </div>
@@ -222,10 +213,6 @@
             </button>
           </div>
           <small v-if="submitted && !transaction.Category" class="field-error">{{ i18nStore.t('category') }} {{ i18nStore.t('validationNameRequired') }}</small>
-        </div>
-        <div class="field-group">
-          <label class="field-label">{{ i18nStore.t('type') }}</label>
-          <Select v-model="transaction.Type" :options="typesOptions" placeholder="Select type" fluid />
         </div>
         <div v-if="showNewCategoryInput" class="custom-cat-box">
           <label class="field-label">{{ i18nStore.t('newCategoryName') }}</label>
@@ -448,41 +435,37 @@ const addNewCategory = () => {
 
 // ── Expenses CRUD ──
 const dt = ref();
+const dtIncomes = ref();
 const transactionDialog = ref(false);
 const deleteTransactionDialog = ref(false);
 const transaction = ref({});
 const submitted = ref(false);
-const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } });
 
-// ── Type Filtering & Dropdown Setup ──
-const selectedTypeFilter = ref('All');
-const typeFilterOptions = ['All', 'Fixed', 'Variable', 'One-time', 'Emergency', 'Investment', 'Personal'];
-const typesOptions = ['Fixed', 'Variable', 'One-time', 'Emergency', 'Investment', 'Personal'];
+// ── Mobile Pagination Setup ──
+const expensesPage = ref(0);
+const expensesRows = ref(5);
+const onExpensesPageChange = (event) => {
+  expensesPage.value = event.page;
+};
 
-const expensesList = computed(() => {
-  let txns = transactionStore.transactions;
-  if (selectedTypeFilter.value && selectedTypeFilter.value !== 'All') {
-    txns = txns.filter(t => (t.Type || 'Variable') === selectedTypeFilter.value);
-  }
-  return txns;
+const incomesPage = ref(0);
+const incomesRows = ref(5);
+const onIncomesPageChange = (event) => {
+  incomesPage.value = event.page;
+};
+
+const paginatedMobileExpenses = computed(() => {
+  const start = expensesPage.value * expensesRows.value;
+  return transactionStore.transactions.slice(start, start + expensesRows.value);
 });
 
-// ── Mobile search & list ──
-const mobileSearch = ref('');
-const filteredExpenses = computed(() => {
-  const q = mobileSearch.value.trim().toLowerCase();
-  const base = expensesList.value;
-  if (!q) return base;
-  return base.filter(t =>
-    (t.Reason || '').toLowerCase().includes(q) ||
-    (t.Category || '').toLowerCase().includes(q) ||
-    String(t.Transcation).includes(q) ||
-    (t.date || '').toLowerCase().includes(q)
-  );
+const paginatedMobileIncomes = computed(() => {
+  const start = incomesPage.value * incomesRows.value;
+  return transactionStore.incomes.slice(start, start + incomesRows.value);
 });
 
 const openNew = () => { 
-  transaction.value = { Type: 'Variable' }; 
+  transaction.value = {}; 
   submitted.value = false; 
   transactionDialog.value = true; 
 };
@@ -494,7 +477,6 @@ const saveTransaction = () => {
     const payload = {
       ...transaction.value,
       Transcation: Number(transaction.value.Transcation),
-      Type: transaction.value.Type || 'Variable'
     };
     if (payload.id) {
       transactionStore.UpdateTransaction(payload);
@@ -509,7 +491,7 @@ const saveTransaction = () => {
 };
 
 const editTransaction = (txn) => { 
-  transaction.value = { ...txn, Type: txn.Type || 'Variable' }; 
+  transaction.value = { ...txn }; 
   transactionDialog.value = true; 
 };
 const confirmDeleteTransaction = (txn) => { transaction.value = txn; deleteTransactionDialog.value = true; };
@@ -883,5 +865,8 @@ const exportIncomesCSV = () => dtIncomes.value.exportCSV();
 .cycle-actions {
   display: flex;
   gap: 0.75rem;
+}
+.mobile-paginator {
+  margin: 0.5rem 0.875rem 1rem;
 }
 </style>

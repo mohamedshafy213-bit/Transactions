@@ -22,6 +22,7 @@ import RadioButtonGroup from 'primevue/radiobuttongroup';
 import InputNumber from 'primevue/inputnumber';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Paginator from 'primevue/paginator';
 import './style.css';
 import 'primeicons/primeicons.css';
  // Assuming your router is here
@@ -31,6 +32,7 @@ import 'primeicons/primeicons.css';
 const app = createApp(App)
 const pinia = createPinia()
 app.component('Button', Button);
+app.component('Paginator', Paginator);
 app.component('Dialog', Dialog);
 app.component('InputText', InputText);
 app.component('InputNumber', InputNumber);
